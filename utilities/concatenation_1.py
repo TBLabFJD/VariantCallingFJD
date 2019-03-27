@@ -32,13 +32,11 @@ def joinFastq(basespaceF, fastqFolder, inputF, sampleFile, analysis, output):
 		basespaceDir=output+"/tmp_basespace"
 		print(basespaceDir)
 		if os.path.isdir(basespaceDir): 
-			sys.stderr.write("ERROR: Temporary basespace folder '%s' already create. Change output path.\n" %(basespaceDir))
-			sys.exit()
+			sys.stderr.write("ERROR: Temporary basespace folder '%s' already created. Change output path.\n" %(basespaceDir))
 		else:
 			os.mkdir(basespaceDir)
-		
-		subprocess.call(["basemount",basespaceDir])
-		sys.stdout.write("\nMounting Basespace COMPLETE...\n")
+			subprocess.call(["basemount",basespaceDir])
+			sys.stdout.write("\nMounting Basespace COMPLETE...\n")
 
 		if not os.path.isdir(basespaceDir+'/Projects/'+inputF): 
 			sys.stderr.write("ERROR: Project '%s' does not exist in basespace\n" %(inputF))
@@ -49,11 +47,11 @@ def joinFastq(basespaceF, fastqFolder, inputF, sampleFile, analysis, output):
 			dnaids =  sorted([f for f in os.listdir(basespaceDir+'/Projects/'+inputF+'/Samples') if not f.startswith('.')])
 	
 	else: 
-		inputF=os.path.realpath(inputF)
+		inputF = os.path.realpath(inputF)
 		dnaids = sorted(set([(os.path.basename(i)).split("_")[0].replace(".fastq.gz", "")  for i in glob(inputF+'/*.fastq.gz')]))
 
 
-
+	print(dnaids)
 
 	# sample concatenation 
 
@@ -69,8 +67,14 @@ def joinFastq(basespaceF, fastqFolder, inputF, sampleFile, analysis, output):
 		if  analysis in ["cnv","all"] or sampleFile=="all" or dnaid in file_samples:
 			
 			if basespaceF=="True":
-				args = ["rsync", "--progress", "-r", basespaceDir+'/Projects/'+inputF+'/Samples/' + dnaid2, fastqFolder]
+				print("antes rsync")
+				print(datetime.datetime.now())
+				os.mkdir(fastqFolder+'/'+dnaid2) # check if existing and delete content.
+				args = ["rsync", "--progress", "--chmod=777", "-r", basespaceDir+'/Projects/'+inputF+'/Samples/' + dnaid2 + "/Files", fastqFolder+'/'+dnaid2]
 				subprocess.call(args)
+				print("despues rsync")
+				print(datetime.datetime.now())
+
 				foward = sorted(glob(fastqFolder+"/"+dnaid2+ '/Files/*R1*.fastq.gz'))
 				reverse = sorted(glob(fastqFolder+"/"+dnaid2+ '/Files/*R2*.fastq.gz'))
 
@@ -86,8 +90,8 @@ def joinFastq(basespaceF, fastqFolder, inputF, sampleFile, analysis, output):
 				foward_file = fastqFolder + dnaid + '_R1.fastq.gz'
 				reverse_file = fastqFolder + dnaid + '_R2.fastq.gz'
 
-				sys.stdout.write(foward_file+ " written"+"\n")
-				sys.stdout.write(reverse_file+" written"+"\n")
+				sys.stdout.write(foward_file + " written"+"\n")
+				sys.stdout.write(reverse_file +" written"+"\n")
 
 				#sys.stdout.write('Joining forward fastq files of sample ' + dnaid +"\n")
 				mycmd = 'cat %s > %s' %(' '.join(foward), foward_file)
@@ -101,9 +105,8 @@ def joinFastq(basespaceF, fastqFolder, inputF, sampleFile, analysis, output):
 				sys.stderr.write("ERROR: Not fastq files found for sample '%s' or different number of reverse and foward fastq files.\n" %(dnaid))
 
 
-			if basespaceF=="True":
-				shutil.rmtree(fastqFolder+"/"+dnaid2)
-				shutil.rmtree(fastqFolder+"/"+dnaid2)
+			#if basespaceF=="True":
+			#	shutil.rmtree(fastqFolder+'/'+dnaid2)
 
 
 	if basespaceF=="True":
