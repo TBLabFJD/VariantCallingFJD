@@ -3,7 +3,7 @@
 ################################
 ### FJD pipeline - Haplotype ###
 ################################
-
+# HOLAAAAAAA
 ### FJD PIPELINE ARGUMENTS:
 
 INPUT=$1
@@ -23,6 +23,7 @@ intervals=${13}
 
 
 # REQUIRED MODULES AND DATABASES:
+
 
 if [ "$local" != "True" ]; then
 
