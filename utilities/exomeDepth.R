@@ -7,23 +7,18 @@ rm(list=ls())
 
 #start clock
 ptm <- proc.time()
-print(ptm)
 
 
 #**************************#
 ### package requirements ###
 #**************************#
 
-list.of.packages <- c("ExomeDepth","optparse","stringr")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-
 library(ExomeDepth)
 library(GenomicRanges)
 library(optparse)
 library(stringr)
-
 data(exons.hg19)
+
 
 #**************#
 #   Arguments  #
@@ -39,12 +34,15 @@ option_list=list(
 
 opt_parser=OptionParser(option_list = option_list)
 opt=parse_args(opt_parser) #list of the args
-cnv_output=paste(opt$outputdir,"/copy_number_variation_data",sep="")
+
+cnv_output=paste(opt$outputdir,"/copy_number_variation_data/ExomeDepth/",sep="")
+dir.create(cnv_output)
 
 sink(paste(opt$outputdir,"/software_",opt$name,".txt",sep=""),append=TRUE)
 print("R SESSION INFO (ExomeDepth):")
 sessionInfo()
 sink() 
+
 
 
 #**********************#
@@ -56,18 +54,25 @@ if(opt$samples!="all"){
 }
 
 
+
+
 #*************#
 #   Regions   #
 #*************#
 
+colnamesbed = c("chromosome", "start",  "end", "name")
+
 if(opt$bed=="genome"){
-        myexons = exons.hg19
-        myexons[,1] = paste("chr",myexons[,1] ,sep = "") 
-        }else{
-        myexons = read.delim(file=opt$bed, header = F, stringsAsFactors = F)
-        colnames(myexons) = colnames(exons.hg19)
-        myexons = myexons[-which(myexons$chromosome %in% c("chrX","chrY", "X","Y")),]
-        }
+  myexons = exons.hg19
+  myexons[,1] = paste("chr",myexons[,1] ,sep = "") 
+}else{
+  myexons = read.delim(file=opt$bed, header = F, stringsAsFactors = F)
+  if(length(colnames(myexons))!=4){
+    cat("ERROR: bed file without NAME field")
+    quit(status = 1)}
+  colnames(myexons) = colnamesbed
+  myexons = myexons[!myexons$chromosome %in% c("chrX","chrY", "X","Y"),]
+}
 
 
 cat('\nTotal number of testing regions: ', nrow(myexons), '\n', sep = "")
@@ -109,7 +114,6 @@ ExomeCount.dafr$chromosome <- gsub(as.character(ExomeCount.dafr$space),pattern =
 
 
 
-
 #******************#
 #   count matrix   #
 #******************#
@@ -139,6 +143,7 @@ cat('\nAll detected samples: ',paste(colnames(ExomeCount.mat), collapse=','),'\n
 
 CNVcalls_sorted_total.toAnnotate = NULL
 CNVcalls_sorted_total = NULL
+corDF = NULL
 
 for (i in 1:nsamples) {
   
@@ -174,80 +179,91 @@ for (i in 1:nsamples) {
                                       MAR = 1,
                                       FUN = sum)
     
-    cat('Now creating the ExomeDepth object...\n')
     
-    all.exons <- new('ExomeDepth',
-                     test = ExomeCount.mat[,i],
-                     reference = my.reference.selected,
-                     formula = 'cbind(test, reference) ~ 1')
+    cat('\nComputing correlation between sample and references...\n')
+    
+    my.test = ExomeCount.mat[, i, drop = FALSE]
+    my.ref.counts = ExomeCount.mat[, my.choice$reference.choice, drop = FALSE]
+    correlation = cor(my.test[,1], apply(my.ref.counts,1,mean))
+    
+    corDF = rbind(corDF, c(samplename, round(correlation,4)))
+    
+    if (correlation > 0.97){
+      
+      cat(paste("Correlation between reference and tests count is",  round(correlation,4), ". Running CNV calling"))
+      
+      cat('Creating the ExomeDepth object...\n')
+      
+      all.exons <- new('ExomeDepth',
+                       test = ExomeCount.mat[,i],
+                       reference = my.reference.selected,
+                       formula = 'cbind(test, reference) ~ 1')
+  
+      cat('Calling CNVs...\n')
+      
+      
+      ################ Now call the CNVs
+      
+      all.exons <- CallCNVs(x = all.exons,
+                            transition.probability = 10^-4,
+                            chromosome = ExomeCount.dafr$chromosome,
+                            start = ExomeCount.dafr$start,
+                            end = ExomeCount.dafr$end,
+                            name = ExomeCount.dafr$names)
+      
+      cat("Detected CNVs:",nrow(all.exons@CNV.calls), "\n", sep=" ")
+      
+      if (nrow(all.exons@CNV.calls) > 0) {
+      
+        # Adding name found in panel
+        
+        rangesMyAnnotation = GenomicRanges::GRanges(seqnames = all.exons@annotations$chromosome,
+                                                    IRanges::IRanges(start=all.exons@annotations$start,end=all.exons@annotations$end),
+                                                    names = all.exons@annotations$name)
+        all.exons <- AnnotateExtra(x = all.exons,
+                                   reference.annotation = rangesMyAnnotation,
+                                   min.overlap = 0.0000001,
+                                   column.name =
+                                     'annotation')
+        
+        # Writting file for VEP annotation
+        
+        CNVcalls_sorted = all.exons@CNV.calls[ order ( all.exons@CNV.calls$BF, decreasing = TRUE),]
 
-    cat('Calling CNVs...\n')
+        CNVcalls_sorted[CNVcalls_sorted$type=="duplication","CNV_type"]<-"DUP"
+        CNVcalls_sorted[CNVcalls_sorted$type=="deletion","CNV_type"]<-"DEL"
+
+        CNVcalls_sorted_total = rbind( CNVcalls_sorted_total, data.frame(samplename,CNVcalls_sorted))
+        CNVcalls_sorted_total.toAnnotate = unique(rbind(CNVcalls_sorted_total.toAnnotate, CNVcalls_sorted[,c("chromosome","start","end","CNV_type"),]))
     
     
-    ################ Now call the CNVs
-    
-    all.exons <- CallCNVs(x = all.exons,
-                          transition.probability = 10^-4,
-                          chromosome = ExomeCount.dafr$chromosome,
-                          start = ExomeCount.dafr$start,
-                          end = ExomeCount.dafr$end,
-                          name = ExomeCount.dafr$names)
-    
-    cat("Detected CNVs:",nrow(all.exons@CNV.calls), "\n", sep=" ")
-    
-    if (nrow(all.exons@CNV.calls) > 0) {
-    
-      # Adding name found in panel
-      
-      rangesMyAnnotation = GenomicRanges::GRanges(seqnames = all.exons@annotations$chromosome,
-                                                  IRanges::IRanges(start=all.exons@annotations$start,end=all.exons@annotations$end),
-                                                  names = all.exons@annotations$name)
-      all.exons <- AnnotateExtra(x = all.exons,
-                                 reference.annotation = rangesMyAnnotation,
-                                 min.overlap = 0.0000001,
-                                 column.name =
-                                   'annotation')
-      
-      # Writting file for VEP annotation
-      
-      CNVcalls_sorted = all.exons@CNV.calls[ order ( all.exons@CNV.calls$BF, decreasing = TRUE),]
-      # Output in tab format ready for VEP
-      #forvep.file=paste('CNV_', samplename, '_ready_toAnnotate', '.txt', sep = '')
-      
-      CNVcalls_sorted[CNVcalls_sorted$type=="duplication","CNV_type"]<-"DUP"
-      CNVcalls_sorted[CNVcalls_sorted$type=="deletion","CNV_type"]<-"DEL"
-      
-      #write.table(x = CNVcalls_sorted[,c("chromosome","start","end","CNV_type"),], file=forvep.file, quote=F, col.names = F, row.names=F, sep="\t")
-      
-      #output.file=paste('CNV_', samplename, '.txt', sep = '')
-      #write.table(file = output.file, x = CNVcalls_sorted[,-13], row.names = FALSE, sep="\t", quote=F)
-    
-      #CNVcalls_sorted_total = rbind( CNVcalls_sorted_total, data.frame(samplename,CNVcalls_sorted, cor(my.test, my.ref.counts), length( my.choice[[1]])))
-      
-      CNVcalls_sorted_total = rbind( CNVcalls_sorted_total, data.frame(samplename,CNVcalls_sorted))
-      CNVcalls_sorted_total.toAnnotate = unique(rbind(CNVcalls_sorted_total.toAnnotate, CNVcalls_sorted[,c("chromosome","start","end","CNV_type"),]))
-  
-  
     }
+    
+    }else{cat(paste("WARNING: Correlation between reference and tests count is",  round(correlation,4), ". Skipped CNV calling.\n"))}
   }
 
 }
 
-#save.image(file = paste(cnv_output,"/",ols pt$name,"_image.RData", sep=''))
 
-output.file = paste('CNV_results_', opt$name, '_exomedepth.txt', sep = '')
-forvep.file = paste('CNV_results_', opt$name,  "_toAnnotate", '.txt', sep = '')
+colnames(corDF) = c("sample", "cor")
+
+output.file = paste(opt$name, '_exomedepth.txt', sep = '')
+forvep.file = paste(opt$name,  "_toAnnotate", '.txt', sep = '')
+cor.file = paste(opt$name,  "_correlation", '.txt', sep = '')
 
 cat("\nOUTPUT FILES:\n")
-print(output.file)
-print(forvep.file)
+cat(paste(output.file,"\n"))
+cat(paste(forvep.file,"\n"))
+cat(paste(cor.file,"\n"))
 
 write.table(x = CNVcalls_sorted_total, file = output.file, row.names = FALSE, sep="\t", quote=F)
 write.table(x = CNVcalls_sorted_total.toAnnotate, file=forvep.file, quote=F, col.names = F, row.names=F, sep="\t")
+write.table(x = corDF, file = cor.file, row.names = FALSE, sep="\t", quote=F)
 
-cat("\nCNV DETECTION FINISHED\n")
+cat("\nEXOMEDEPTH CNV DETECTION FINISHED\n")
 
 #stop clock
 finish <- proc.time() - ptm
 print(finish)
 summary(finish)
+
