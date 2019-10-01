@@ -105,7 +105,7 @@ my.counts <- getBamCounts(bed.frame = myexons,
 
 setwd(cnv_output)
 
-save.image(file = paste(opt$name,"_counts_image.RData", sep=''))
+save.image(file = paste('exomedepth',"_counts_image.RData", sep=''))
 
 ExomeCount.dafr <- as(my.counts[, colnames(my.counts)], 'data.frame')
 
@@ -247,9 +247,9 @@ for (i in 1:nsamples) {
 
 colnames(corDF) = c("sample", "cor")
 
-output.file = paste(opt$name, '_exomedepth.txt', sep = '')
-forvep.file = paste(opt$name,  "_toAnnotate", '.txt', sep = '')
-cor.file = paste(opt$name,  "_correlation", '.txt', sep = '')
+output.file = paste('exomedepth','_results.txt', sep = '')
+forvep.file = paste('exomedepth','_toAnnotate.txt', sep = '')
+cor.file = paste('exomedepth',  "_correlation", '.txt', sep = '')
 
 cat("\nOUTPUT FILES:\n")
 cat(paste(output.file,"\n"))
