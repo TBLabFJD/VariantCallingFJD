@@ -59,7 +59,7 @@ test <- countBamListInGRanges(countWindows = countWindows,
                               bam.files = bamFile, 
                               read.width = 150)
 setwd(output_dir)
-save.image(file = paste("panelcn.mops.','_counts_image.RData", sep=''))
+save.image(file = paste('panelcn.mops.','_counts_image.RData', sep=''))
 
 
 #***********************#
