@@ -15,7 +15,10 @@ ped=$5
 local=$6
 pathology=$7
 single=$8
-utilitiesPath=$9
+genefilter=$9
+utilitiesPath=${10}
+
+
 
 
 
@@ -701,6 +704,37 @@ fi
 end=`date +%s`
 runtime=$((end-start))
 echo -e  '\nExecuting time: '$runtime 
+
+
+
+
+# Filter PVM files based on gene list
+
+if [ "$genefilter" != "False" ]; then
+
+
+	start=`date +%s`
+
+	VCF_FINAL_PVM_FILTER="${VEPVCFAD}/${run}_filteredAnnotated_pvm_GENELIST.txt"
+	
+	python $utilitiesPath/filtering_geneList.py -i ${VCF_FINAL_PVM} -f ${genefilter} -o ${VCF_FINAL_PVM_FILTER}
+
+
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf '\nVARIANT FILTERING BY GENE LIST for '${run}' DONE'
+
+	else
+		printf "\nERROR: PROBLEMS WITH GENE FILTERING"
+		exit 1
+	fi
+
+	end=`date +%s`
+	runtime=$((end-start))
+	printf '\nExecuting time: '$runtime 
+
+fi
+
 
 
 

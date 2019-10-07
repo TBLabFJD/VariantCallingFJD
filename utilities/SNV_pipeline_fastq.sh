@@ -24,8 +24,11 @@ pathology=${15}
 intervals=${16}
 duplicates=${17}
 removebam=${18}
-utilitiesPath=${19}
-
+genefilter=${19}
+user=${20}
+echo $user
+utilitiesPath=${21}
+echo $utilitiesPath
 
 printf "\n......................................................\n"
 printf "  MAPPING OR/AND SNV CALLING FOR SAMPLE $sample \n"
@@ -171,7 +174,7 @@ mkdir $TMP
 if [ "$skipmapping" != "True" ]; then
 
 	if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
-		python $utilitiesPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample
+		python $utilitiesPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample $user
 		if [ "$?" != "0" ]; then
 			printf "\nERROR: PROBLEMS WITH BASESPACE DATA DOWNLOADING/CONCATENATION"
 			exit 1
@@ -851,7 +854,7 @@ runtime=$((end-start))
 echo -e  '\nExecuting time: '$runtime 
 
 
-a
+
 if [ "$local" != "True" ]; then
 	module unload plink/1.90beta
 fi
@@ -1072,6 +1075,8 @@ if [ "$?" = "0" ]; then
 
 else
 	printf "\nERROR: PROBLEMS WITH POST-VEP MODIFICATIONS"
+	exit 1
+
 fi
 
 end=`date +%s`
@@ -1079,6 +1084,35 @@ runtime=$((end-start))
 printf '\nExecuting time: '$runtime 
 
 
+
+
+# Filter PVM files based on gene list
+
+if [ "$genefilter" != "False" ]; then
+
+
+	start=`date +%s`
+
+	VCF_FINAL_PVM_FILTER="${VEPVCFAD}/${sample}_filteredAnnotated_pvm_GENELIST.txt"
+	
+	python $utilitiesPath/filtering_geneList.py -i ${VCF_FINAL_PVM} -f ${genefilter} -o ${VCF_FINAL_PVM_FILTER}
+
+
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf '\nVARIANT FILTERING BY GENE LIST for '${sample}' DONE'
+
+	else
+		printf "\nERROR: PROBLEMS WITH GENE FILTERING"
+		exit 1
+
+	fi
+
+	end=`date +%s`
+	runtime=$((end-start))
+	printf '\nExecuting time: '$runtime 
+
+fi
 
 
 
@@ -1091,40 +1125,5 @@ rm -r $TMP
 
 
 
-
-
-
-# echo -e  "\n\n\n- HOMOZYGOSITY (PLINK) "
-# echo -e  "-------------------------\n"
-
-
-# 	plink --vcf -recode -out mycancerplink2
-# 	../plink --file hapmap1 --homozyg  --homozyg-snp 50 --homozyg-window-het 0
-# 	vcftools --vcf genotyped_data_allsamples.vcf --out mycancerplink2 --plink
-# 	../plink --bfile hola-temporary --homozyg  --homozyg-snp 50  --homozyg-window-het 0
-
-# 	# Plink default: 
-# 	--homozyg-kb 1,000
-# 	--homozyg-snp 100
-
-# 	# Plink improvemements (minimizes the trade-off between the exclusion of non-autozygous ROHs and the cost of missing shorter autozygous ROHs)
-# 	# - 1. remove SNPs with MAF < 0.05
-# 	# - 2. LD prunning in two levels: ligth to moderate outperforms ROH detection -> --indep 
-# 	# Parameters of light prunning: r2>0.9 in a 50 SNP window (VIF > 10)
-# 	# Parameters of moderate prunning: 50 SNP window that had r2>0.5 (VIF > 2)
-
-# 	# - type1 and type2 error rates are computed at SNP level.
-
-# 	# You may also want to try 'bcftools roh', which uses a HMM-based detection method. 
-# 	#(We'll include a basic port of that command in PLINK 2.0 if there is sufficient interest.)
-
-# 	#(For more accurate detection of smaller segments, one might consider approaches that also take
-# 	# population parameters such as allele frequency and recombination rate into account, 
-# 	# in a HMM approach for example: but for now, PLINK only supports this basic detection of long, homozygous segments). 
-
-# 	#   The originality of this algorithm consists in its capabil-ity to incorporate distances between consecutive SNPs to discriminate between the homozygosity and the hetero-zygosity states. This feature of  H3M2  offers advantage in the detection of small-sized (<500 kb) and medium-sized (between 500 and 1,500 kb) ROH  [18] . 
-# 	# Differently,  H3M2and PLINK show similar performances in the WES-based detection of long ROH (>1,500 kb)
-
-# fi
 
 

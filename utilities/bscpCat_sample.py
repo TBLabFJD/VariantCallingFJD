@@ -9,7 +9,7 @@ import shutil
 
 
 
-def joinFastq(basespaceF, fastqFolder, inputF, dnaid):
+def joinFastq(basespaceF, fastqFolder, inputF, dnaid, user):
 
 	
 	#sys.stdout.write("\nANALYSING SAMPLE %s\n" %(sample))
@@ -20,9 +20,19 @@ def joinFastq(basespaceF, fastqFolder, inputF, dnaid):
 		sampleFolder = fastqFolder+'/'+dnaid2
 		os.mkdir(sampleFolder) # check if existing and delete content.
 		sys.stdout.write("Downloading fastq files"+"\n")
-		#cmd = "/home/proyectos/bioinfo/software/bs-cp -q -s //./Projects/"+inputF+"/Samples/"+dnaid+" "+sampleFolder
-		cmd = "/home/proyectos/bioinfo/software/bs-cp -q -s //./Projects/"+inputF+"/Samples/"+dnaid2+" "+sampleFolder
 		
+		if user=="False":
+			
+			config = "."
+
+		else:
+
+			config = user
+
+
+		cmd = "/home/proyectos/bioinfo/software/bs-cp -q -s //"+ config +"/Projects/"+inputF+"/Samples/"+dnaid2+" "+sampleFolder
+		print(cmd)
+
 		sys.stderr.write(cmd)
 		proc = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		stdout, stderr = proc.communicate()
@@ -34,7 +44,7 @@ def joinFastq(basespaceF, fastqFolder, inputF, dnaid):
 			if "More than one matching identifier found for" in stderr:
 				id = stderr.split("\n")[1].split('(', 1)[1].split(')')[0]
 				sys.stderr.write("WARNING: Downloading sample '%s'\n" %(stderr.split("\n")[1].strip()))
-				cmd="/home/proyectos/bioinfo/software/bs-cp -q -s //./Projects/"+inputF+"/Samples/"+id+" "+sampleFolder
+				cmd="/home/proyectos/bioinfo/software/bs-cp -q -s //"+ config +"/Projects/"+inputF+"/Samples/"+id+" "+sampleFolder
 				exitcode = subprocess.call(cmd, shell=True)
 				if exitcode != 0:
 					sys.stderr.write("ERROR: 'Something was wrong when downloading sample %s from basespace'.\n" %(stderr.split("\n")[1]))
@@ -85,5 +95,5 @@ def joinFastq(basespaceF, fastqFolder, inputF, dnaid):
 if __name__ == "__main__":
 
 	import sys
-	joinFastq(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+	joinFastq(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
 

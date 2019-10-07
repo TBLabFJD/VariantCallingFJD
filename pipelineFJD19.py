@@ -63,6 +63,7 @@ def main():
 	parser.add_argument('-l', '--local', help='\t\tRun in local', required=False, action='store_true')
 	parser.add_argument('-t', '--threads', help='\t\tNumber of threads', type=int, required=False, default=1)
 	parser.add_argument('-M', '--memory', help='\t\tNumber of GBs', type=int, required=False, default=5)
+	parser.add_argument('-f', '--genefilter', help='\t\tGene list to filter SNVs', required=False, default=False)
 	parser.add_argument('-T', '--time', help='\t\tNumber of hours', type=int, required=False, default=1000)
 	parser.add_argument('-m', '--mail', help='\t\tMail account', required=False)
 	parser.add_argument('-S', '--single' , help='\t\tConserve sample VCFs when running combined genotyping (CVCF)', required=False, action='store_true')
@@ -77,12 +78,11 @@ def main():
 	parser.add_argument('-w', '--window', help="125 window size for CNV intervals", required=False, action='store_true')
 	parser.add_argument('-B', '--remove_bam', help="Remove bam files", required=False, action='store_true')
 	parser.add_argument('-d', '--duplicates', help="Remove duplicates. By default, duplicates are just marked", required=False, action='store_true')
+	parser.add_argument('-u', '--basemountuser', help="Specify alternative basemount user", required=False, default=False)
 
 
 	fjd_start_time = time.time()
 	args = parser.parse_args()
-
-
 
 
 	# label for current lab
@@ -183,6 +183,13 @@ def main():
 
 
 
+	# checking if gene list exits
+	if args.genefilter!=False:
+		if not os.path.isfile(args.genefilter): 
+			sys.stderr.write("ERROR: File listing genes of interest ('%s') does not exist\n" %(args.genefilter))
+			sys.exit()
+
+
 
 	# checking if bam folder is empty
 
@@ -255,6 +262,7 @@ def main():
 
 
 	if not args.basespace:
+
 		if not os.path.isdir(args.input): 
 			sys.stderr.write("ERROR: Input folder '%s' does not exist\n" %(args.input))
 			sys.exit()
@@ -307,14 +315,30 @@ def main():
 	
 	else:
 
-		# Check project name
+		# Check project name and if exists list all samples associated to that project
 
 		sys.stdout.write("\nChecking if project exists...\n")
 
-		projectfile = args.output+'/'+run+'projects.txt'
-		cmd="/home/proyectos/bioinfo/software/bs list project > "+projectfile
-		
+		projectfile = args.output+'/'+run+'_projects.txt'
+		datasetfile = args.output+'/'+args.input+'_'+run+'_'+'datasets.txt'
+
+		projName = "--project-name="+args.input
+		stdoutFile = "--stdout="+datasetfile
+
+		if args.basemountuser==False:
+			
+			config = ""
+
+		else:
+
+			config = "--config "+args.basemountuser
+
+
+		# bs list projects
+
+		cmd="/home/proyectos/bioinfo/software/bs list project "+config+ " > "+ projectfile
 		subprocess.call(cmd, shell=True)
+
 
 		with open(projectfile) as myfile:
 			if args.input not in myfile.read().split():
@@ -323,13 +347,10 @@ def main():
 				os.remove(projectfile)
 
 
-		### Take all dnaids in project
+		### bs list dnaids (samples)
 
-		projName = "--project-name="+args.input
-		datasetfile = args.output+'/'+args.input+'_'+run+'_'+'datasets.txt'
-		stdoutFile = "--stdout="+datasetfile
-		cmd = " ".join(["/home/proyectos/bioinfo/software/bs",  "list", "biosample", "--sort-by=BioSampleName", projName,  stdoutFile])
-		subprocess.call(cmd, shell=True)
+		cmdSamples = " ".join(["/home/proyectos/bioinfo/software/bs",  "list", "biosample", "--sort-by=BioSampleName", config, projName,  stdoutFile])
+		subprocess.call(cmdSamples, shell=True)
 
 
 		# if project samples, we save the entire biosample name but check with the input sample file by looking at the first 7 characters 
@@ -403,10 +424,14 @@ def main():
 
 		for sample_name in sample_names: # four options: (1) no sample analysis; (2) just mapping; (3) just snp; (4) mapping + snp
 
+			sampleAnalysis = None
+
 			if args.analysis in ["cnv","all"] or sample_name in sample_namesT: # just analyse if contained in samples_files or we are running CNVs	
 
-				if args.skipMapping and sample_name in sample_namesT:
-					sampleAnalysis = "snp" 
+				if args.skipMapping:
+					
+					if sample_name in sample_namesT:
+						sampleAnalysis = "snp" 
 
 				elif args.analysis in ["snp","all"] and sample_name in sample_namesT:
 					sampleAnalysis = "mapping_snp" 
@@ -414,36 +439,38 @@ def main():
 				else:
 					sampleAnalysis = "mapping"
 
-				
+
 				### MAPPING AND GENOTYPING
-				sys.stdout.write("\nAnalysing individual sample '%s' (%s) with arguments:\n\n" %(sample_name, sampleAnalysis))
-				
-				myargs_desc = ["SCRIPT", "INPUT FOLDER", "OUTPUT DIR", "SAMPLE LABEL", "N THREADS", "RUN LABEL", "PANEL BED FILE", "BASESPACE DOWNLOAD", "CONCATENATION", "INPUT DIRECTORY", "ANALYSIS TYPE", "COMBINED VCF", "SKIPPING MAPPING STEP", "GENOME BUNDLE", "LOCAL", "PATHOLOGY", "INTERVALS", "REMOVE DUPLICATES", "REMOVE BAM FILES", "utilities"]
-				myargs = [utilitiesPath+"SNV_pipeline_fastq.sh", args.input, args.output, sample_name, str(args.threads), run, args.panel, str(args.basespace), str(cat), inputDir, sampleAnalysis, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.pathology), str(args.intervals), str(args.duplicates), str(removebam), utilitiesPath]
-				[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs[i])) for i in range(1,len(myargs)-1)]
-				job_name =  sampleAnalysis+"_"+sample_name
-				sys.stdout.write("JOB NAME: %s\n" %(job_name))
 
-				start_time = time.time()
+				if sampleAnalysis!=None:
 
-				if args.local:	# LOCAL
-					stdout_f = open(args.output+"/"+job_name+".out", 'w')
-					stderr_f = open(args.output+"/"+job_name+".err", 'w')
-					print(myargs)
-					subprocess.call(myargs, stdout=stdout_f, stderr=stderr_f)
-				
-				elif sampleAnalysis=="mapping": # SBATCH AND SAVE JOB IDS FOR MAPPING SAMPLES
-					jobid=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep='')
-					print(jobid)
-					jobid_list.append(jobid)
-					sys.stdout.write("JOB ID: %s\n" %(jobid))
+					sys.stdout.write("\nAnalysing individual sample '%s' (%s) with arguments:\n\n" %(sample_name, sampleAnalysis))
+					
+					myargs_desc = ["SCRIPT", "INPUT FOLDER", "OUTPUT DIR", "SAMPLE LABEL", "N THREADS", "RUN LABEL", "PANEL BED FILE", "BASESPACE DOWNLOAD", "CONCATENATION", "INPUT DIRECTORY", "ANALYSIS TYPE", "COMBINED VCF", "SKIPPING MAPPING STEP", "GENOME BUNDLE", "LOCAL", "PATHOLOGY", "INTERVALS", "REMOVE DUPLICATES", "REMOVE BAM FILES", "GENE LIST", "BASESPACE USER", "utilities"]
+					myargs = [utilitiesPath+"SNV_pipeline_fastq.sh", args.input, args.output, sample_name, str(args.threads), run, args.panel, str(args.basespace), str(cat), inputDir, sampleAnalysis, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.pathology), str(args.intervals), str(args.duplicates), str(removebam), str(args.genefilter), str(args.basemountuser) ,utilitiesPath]
+					[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs[i])) for i in range(1,len(myargs)-1)]
+					job_name =  sampleAnalysis+"_"+sample_name
+					sys.stdout.write("JOB NAME: %s\n" %(job_name))
 
-				else: # SBATCH AND SAVE JOB IDS FOR MAPPING AND SNP CALLING SAMPLES
-					jobid_snp=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep='')
-					jobid_list_snp.append(jobid_snp)
-					sys.stdout.write("JOB ID: %s\n" %(jobid_snp))
+					start_time = time.time()
 
-				print("TOTAL SECONDS: %s\n" % (time.time() - start_time))
+					if args.local:	# LOCAL
+						stdout_f = open(args.output+"/"+job_name+".out", 'w')
+						stderr_f = open(args.output+"/"+job_name+".err", 'w')
+						print(myargs)
+						subprocess.call(myargs, stdout=stdout_f, stderr=stderr_f)
+					
+					elif sampleAnalysis=="mapping": # SBATCH AND SAVE JOB IDS FOR MAPPING SAMPLES
+						jobid=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep='')
+						jobid_list.append(jobid)
+						sys.stdout.write("JOB ID: %s\n" %(jobid))
+
+					else: # SBATCH AND SAVE JOB IDS FOR (MAPPING AND SNP) OR (SNP) CALLING SAMPLES
+						jobid_snp=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep='')
+						jobid_list_snp.append(jobid_snp)
+						sys.stdout.write("JOB ID: %s\n" %(jobid_snp))
+
+					print("TOTAL SECONDS: %s\n" % (time.time() - start_time))
 
 
 
@@ -461,8 +488,8 @@ def main():
 
 
 		sys.stdout.write("Combining genotyping with arguments:\n")
-		myargs_desc = ["SCRIPT", "OUTPUT DIR", "RUN LABEL", "NUMBER THREADS", "GENOME BUNDLE","PEDIGREE","LOCAL","PATHOLOGY", "KEEP SINGLE VCFs", "utilities"]
-		myargs_cvcf = [utilitiesPath+"combinedGenotyping.sh", args.output, run, str(args.threads), args.genome, args.pedigree, str(args.local), str(args.pathology), str(args.single), utilitiesPath]
+		myargs_desc = ["SCRIPT", "OUTPUT DIR", "RUN LABEL", "NUMBER THREADS", "GENOME BUNDLE","PEDIGREE","LOCAL","PATHOLOGY", "KEEP SINGLE VCFs", "GENE LIST", "utilities"]
+		myargs_cvcf = [utilitiesPath+"combinedGenotyping.sh", args.output, run, str(args.threads), args.genome, args.pedigree, str(args.local), str(args.pathology), str(args.single), str(args.genefilter), utilitiesPath]
 
 		[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs_cvcf[i])) for i in range(1,len(myargs_cvcf))]
 		sys.stdout.write("FILE WITH SAMPLE NAMES: %s/haplotype_caller_gvcf_data/my_list_of_gvcfs_files_to_combine_%s.list\n" %(args.output, run))
@@ -507,9 +534,9 @@ def main():
 
 
 		sys.stdout.write("Copy number variants calling with arguments:\n")
-		myargs_desc = ["SCRIPT", "OUTPUT DIR", "BAM DIRECTORY", "SAMPLES FILE", "RUN LABEL", "NUMBER THREADS", "PANEL BED FILE", "WINDOW", "utilities", "LOCAL", "METHODS", "SKIP COVERAGE FILTERING"]
+		myargs_desc = ["SCRIPT", "OUTPUT DIR", "BAM DIRECTORY", "SAMPLES FILE", "RUN LABEL", "NUMBER THREADS", "PANEL BED FILE", "WINDOW", "utilities", "LOCAL", "METHODS", "SKIP COVERAGE FILTERING", "GENE LIST"]
 		method = "QC,"+args.cnv_method+",MA"
-		myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method, str(args.depth)]
+		myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method, str(args.depth), str(args.genefilter)]
 
 		[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs_cnv[i])) for i in range(1,len(myargs_cnv))]
 		sys.stdout.write("BAM FILES:\n%s" %("\n".join(glob(bamF + '/*.bam'))))
@@ -532,7 +559,7 @@ def main():
 				depJobs_list = []
 	
 			for method in method.split(","):
-				myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method,  str(args.depth)]
+				myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method,  str(args.depth), str(args.genefilter)]
 				job_name = method+"_CNV_"+run
 
 				if method == "QC":
@@ -545,7 +572,7 @@ def main():
 				elif method == "MA":
 					sys.stdout.write("\n#########  COMBINING CNV RESULTS FROM ALTERNATIVE METHODS \n")
 					depJobs = ':'.join(vdepCVjobs_list)
-					jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs)
+					jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
 					vdepCVjobs_list.append(jobidMA)
 					sys.stdout.write("JOB ID: %s\n" %(jobidMA))
 					sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
@@ -582,27 +609,52 @@ def main():
 		sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 
 	
-	print("................................")
-	elapsed = time.time() - fjd_start_time
-	fjdtime = str(datetime.timedelta(seconds=elapsed))
-	print("TOTAL RUNNING TIME: %s" % fjdtime)
-	print("................................")
 
 
-	# mycmdcopySW = 'cat %s >> %s' %(args.output+"/software"+run+".txt", stdoutAll)
-	# subprocess.Popen(mycmdcopySW, shell=True)
+
+
+	if args.local:	
+
+		# if local 
+
+
+		print("................................")
+		elapsed = time.time() - fjd_start_time
+		fjdtime = str(datetime.timedelta(seconds=elapsed))
+		print("TOTAL RUNNING TIME: %s" % fjdtime)
+		print("................................")
+
+
+
+	else:
+
+		# create a new job which analysed what happend with all the jobs ran during these task
+
+		sys.stdout.write("\n...............................\n")
+		sys.stdout.write("  SLURM JOB STATUS SUMMARY \n")
+		sys.stdout.write(".................................\n\n")
+
+		depJobs_list = jobid_list + jobid_list_snp + cvcfjobs_list + [jobidQC] + vdepCVjobs_list  + [jobidREMOVE]
+		depJobs = ':'.join(depJobs_list)
+		job_name = "slurmSummary_"+run
+
+		myargs_summary = [utilitiesPath+"checkproject.sh", args.output, depJobs, run]
+
+		jobidSUM=sbatch(job_name, args.output, ' '.join(myargs_summary), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
+		sys.stdout.write("JOB ID: %s\n" %(jobidSUM))
+		sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
+
 	
 
 
 
 
 
-	# remove 
-	# folders = list(os.walk(root))[1:]
 
-	# for folder in folders:
-	#     if not folder[2]:
-	#         os.rmdir(folder[0])
+
+
+
+
 
 
 

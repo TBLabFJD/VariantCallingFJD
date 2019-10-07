@@ -143,7 +143,7 @@ def fileCombiner(filesdir,filespattern):
         os.chdir(cwd) # Set back to the previous working directory
         return(dfout)
     else:
-        print("\nERROR: PROBLEMS WITH CoNVaDING CNV CALLING")
+        #print("\nERROR: PROBLEMS WITH CoNVaDING CNV CALLING")
         raise SystemExit, 1
 
 
@@ -196,5 +196,5 @@ for i in range(0,len(combiout)):
 combiout.to_csv(output_folder + 'CoNVaDING' + "_results.txt", sep='\t', index = False)
 
 
-print("EXIT STATUS: 0")
-print("\nCoNVaDING FOR PROJECT %s DONE" %(project_name))
+#print("EXIT STATUS: 0")
+#print("\nCoNVaDING FOR PROJECT %s DONE" %(project_name))

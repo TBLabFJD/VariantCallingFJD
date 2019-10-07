@@ -18,6 +18,8 @@ utilitiesPath=$8
 local=$9
 methods=${10}
 depth=${11}
+genefilter=${12}
+
 
 
 # REQUIRED MODULES:
@@ -171,9 +173,19 @@ if echo "$methods" | grep -q "ED"; then
 	printf "\nRunning ExomeDepth"
 	echo Rscript $utilitiesPath/exomeDepth.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run -s $SAMPLEFILE
 	Rscript $utilitiesPath/exomeDepth.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run -s $SAMPLEFILE
+
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf '\nExomeDepth CNV calling for '${run}' DONE'
+
+	else
+		printf "\nERROR: PROBLEMS WITH ExomeDepth CNV calling"
+		exit 1
+	fi
+
 	end=`date +%s`
 	runtime=$((end-start))
-	echo "ExomeDepth took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds."
+	echo "ExomeDepth took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds.\n"
 fi
 
 
@@ -183,9 +195,19 @@ if echo "$methods" | grep -q "CN"; then
 	start=`date +%s`
 	printf "\nRunning CoNVaDING"
 	python $utilitiesPath/CoNVading_pipeline.py $HCGVCFD $finalpanel $MDAP $run $utilitiesPath $fai
+
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf '\nCoNVading CNV calling for '${run}' DONE'
+
+	else
+		printf "\nERROR: PROBLEMS WITH CoNVading CNV calling"
+		exit 1
+	fi
+
 	end=`date +%s`
 	runtime=$((end-start))
-	echo "CoNVaDING took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds."
+	echo "CoNVaDING took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds.\n"
 fi
 
 
@@ -195,9 +217,19 @@ if echo "$methods" | grep -q "C2"; then
 	start=`date +%s`
 	printf "\nRunning CODEX2"
 	Rscript $utilitiesPath/CODEX2.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run
+
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf '\nCODEX2 CNV calling for '${run}' DONE'
+
+	else
+		printf "\nERROR: PROBLEMS WITH CODEX2 CNV calling"
+		exit 1
+	fi
+
 	end=`date +%s`
 	runtime=$((end-start))
-	echo "CODEX2 took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds."
+	echo "CODEX2 took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds.\n"
 fi
 
 
@@ -209,7 +241,7 @@ if echo "$methods" | grep -q "PM"; then
 	Rscript $utilitiesPath/panelcnMops.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run
 	end=`date +%s`
 	runtime=$((end-start))
-	echo "panelcn.MOPS took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds."
+	echo "panelcn.MOPS took $(($runtime / 60)) minutes and $(($runtime % 60)) seconds.\n"
 fi
 
 
@@ -221,62 +253,86 @@ fi
 if echo "$methods" | grep -q "MA"; then
 
 
-	printf "\nRunning CNV_result_mixer"
-	Rscript $utilitiesPath/CNV_result_mixer.R -o $MDAP -n $run -b $finalpanel -s $SAMPLEFILE -d $HCGVCFD
+
+	start=`date +%s`
+
+
+	printf "\nRunning CNV_result_mixer and gene filtering (optional)"
+	Rscript $utilitiesPath/CNV_result_mixer.R -o $MDAP -n $run -b $finalpanel -s $SAMPLEFILE -d $HCGVCFD -f $genefilter
 	
+
 	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf '\nCNV mix for '${run}' DONE'
 
-
-		#####################
-		## CNVs ANNOTATION ##
-		#####################
-
-		printf '\n\nVEP annotation... ¡¡¡¡¡ TO BE IMPLEMENTED !!!!!!'
-
-		# perl $VEP \
-		# --cache --hgvs --merged --offline --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork $threads --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite \
-		# --biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class \
-		# --canonical \
-		# --sift p --polyphen p --af --max_af \
-		# --format vcf --tab \
-		# --pubmed \
-		# --plugin dbscSNV,${PLUGIN_DBS}/dbscSNV1.1_GRCh37.txt.gz \
-		# --plugin LoFtool,${PLUGIN_DIR}/LoFtool_scores.txt \
-		# --plugin ExACpLI,${PLUGIN_DIR}/ExACpLI_values.txt \
-		# --plugin dbNSFP,${dbNSFP_DB},gnomAD_exomes_AF,gnomAD_exomes_NFE_AF,gnomAD_genomes_AF,1000Gp3_AF,1000Gp3_EUR_AF,ExAC_AF,ExAC_EAS_AF,ExAC_NFE_AF,ExAC_Adj_AF,rs_dbSNP150,phyloP20way_mammalian,phyloP20way_mammalian_rankscore,phastCons20way_mammalian,phastCons20way_mammalian_rankscore,GERP++_RS,GERP++_RS_rankscore,LRT_pred,MutationTaster_pred,MutationAssessor_pred,FATHMM_pred,PROVEAN_pred,MetaLR_pred,MetaSVM_pred,M-CAP_pred,Interpro_domain,GTEx_V6p_gene,GTEx_V6p_tissue \
-		# -i $CNV/${run}_combined_toAnnotate.txt -o $CNV/CNV_${run}_combined_VEP.txt
-
-
-		# if [ "$?" = "0" ]; then
-		# 	printf '\nEXIT STATUS: 0'
-		# 	printf "\nVEP ANNOTATION FOR FILE $CNV/CNV_results_VEP_${run}.txt DONE"
-
-		# else
-		# 	printf "\nERROR: PROBLEMS WITH VEP ANNOTATION"
-		# 	exit 1
-		# fi
-
-
-		### IMPORTANT
-		### BACK BAM FILES TO ORIGINAL POSITION
-
-
-		# ##############################
-		# ## FINAL CNV ANNOTATED FILE ##
-		# ##############################
-
-
-		# echo -e "\nMerging exomeDepth and VEP output files..."
-
-
-		# Rscript $utilitiesPath/vep_processing.R -c $CNV/CNV_results_${run}_exomedepth.txt -v $CNV/CNV_results_VEP_${run}.txt -o $CNV/FINAL_CNV_results_${run}.txt
-
-
-		# echo -e "\nFINAL CNV RESULTS in $CNV/FINAL_CNV_results_${run}.txt"
-
-
-
+	else
+		printf "\nERROR: PROBLEMS WITH CNV mixer"
+		exit 1
 	fi
+
+	end=`date +%s`
+
+
+	runtime=$((end-start))
+	printf '\nExecuting time: '$runtime 
+
+
+
+	### IMPORTANT
+	### BACK BAM FILES TO ORIGINAL POSITION
+	
+
+
+
+	#####################
+	## CNVs ANNOTATION ##
+	#####################
+
+	printf '\n\nVEP annotation... ¡¡¡¡¡ TO BE IMPLEMENTED !!!!!!'
+
+	# perl $VEP \
+	# --cache --hgvs --merged --offline --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork $threads --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite \
+	# --biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class \
+	# --canonical \
+	# --sift p --polyphen p --af --max_af \
+	# --format vcf --tab \
+	# --pubmed \
+	# --plugin dbscSNV,${PLUGIN_DBS}/dbscSNV1.1_GRCh37.txt.gz \
+	# --plugin LoFtool,${PLUGIN_DIR}/LoFtool_scores.txt \
+	# --plugin ExACpLI,${PLUGIN_DIR}/ExACpLI_values.txt \
+	# --plugin dbNSFP,${dbNSFP_DB},gnomAD_exomes_AF,gnomAD_exomes_NFE_AF,gnomAD_genomes_AF,1000Gp3_AF,1000Gp3_EUR_AF,ExAC_AF,ExAC_EAS_AF,ExAC_NFE_AF,ExAC_Adj_AF,rs_dbSNP150,phyloP20way_mammalian,phyloP20way_mammalian_rankscore,phastCons20way_mammalian,phastCons20way_mammalian_rankscore,GERP++_RS,GERP++_RS_rankscore,LRT_pred,MutationTaster_pred,MutationAssessor_pred,FATHMM_pred,PROVEAN_pred,MetaLR_pred,MetaSVM_pred,M-CAP_pred,Interpro_domain,GTEx_V6p_gene,GTEx_V6p_tissue \
+	# -i $CNV/${run}_combined_toAnnotate.txt -o $CNV/CNV_${run}_combined_VEP.txt
+
+
+	# if [ "$?" = "0" ]; then
+	# 	printf '\nEXIT STATUS: 0'
+	# 	printf "\nVEP ANNOTATION FOR FILE $CNV/CNV_results_VEP_${run}.txt DONE"
+
+	# else
+	# 	printf "\nERROR: PROBLEMS WITH VEP ANNOTATION"
+	# 	exit 1
+	# fi
+
+
+
+
+
+	# ##############################
+	# ## FINAL CNV ANNOTATED FILE ##
+	# ##############################
+
+
+	# echo -e "\nMerging exomeDepth and VEP output files..."
+
+
+	# Rscript $utilitiesPath/vep_processing.R -c $CNV/CNV_results_${run}_exomedepth.txt -v $CNV/CNV_results_VEP_${run}.txt -o $CNV/FINAL_CNV_results_${run}.txt
+
+
+	# echo -e "\nFINAL CNV RESULTS in $CNV/FINAL_CNV_results_${run}.txt"
+
+
+
+
 fi
 
 

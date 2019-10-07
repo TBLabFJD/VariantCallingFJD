@@ -21,7 +21,9 @@ option_list=list(
   make_option(c('-n','--name'),type="character", help="Project name."),
   make_option(c('-b','--bed'),type="character",default="genome", help="Bed file with genes found in panel"),
   make_option(c('-s','--samples'), type="character", help="File with negative samples"),
-  make_option(c("-d","--dir"),type="character", help="Directory with input bam files to analyse."))
+  make_option(c("-d","--dir"),type="character", help="Directory with input bam files to analyse."),
+  make_option(c("-f","--genefile"),type="character", help="File with list of genes to filter results."))
+
 
 opt_parser=OptionParser(option_list = option_list)
 opt=parse_args(opt_parser) #list of the args
@@ -145,7 +147,7 @@ tryCatch(
 #**************************#
 # Import Panelcn.MOPS data #
 #**************************#
-panelMops_output <- paste(output_dir, "/Panelcn.MOPS/", 'panelcn.MOPS', 'results.txt', sep = '')
+panelMops_output <- paste(output_dir, "/Panelcn.MOPS/", 'panelcn.MOPS', '_results.txt', sep = '')
 tryCatch(
   {
     panelMops_data <- read.delim(panelMops_output, stringsAsFactors = FALSE)
@@ -328,9 +330,10 @@ if(opt$samples!="all"){
     }
   }
   data_out2 <- data_out3
-  cat("#Analyzed samples: ", paste(analyced_samples, collapse = ", "), "\n", sep = "", file = paste(projectname, "_combined.txt", sep = ""), append = TRUE)
-}else{cat("#Analyzed samples: ", paste(total_samples, collapse = ", "), "\n", sep = "", file = paste(projectname, "_combined.txt", sep = ""), append = TRUE)}
+  mysamples = analyced_samples
+}else{mysamples = total_samples}
 
+cat("#Analyzed samples: ", paste(mysamples, collapse = ", "), "\n", sep = "", file = paste(projectname, "_combined.txt", sep = ""))
 
 # Order the output
 data_out2 <- data_out2[order(data_out2$NUM_OF_PROGRAMS, decreasing = TRUE),]
@@ -368,5 +371,32 @@ write.table(bedout, file = paste(projectname, "_extended.bed", sep = ""), sep = 
 
 
 
+# Filtering results by gene list
 
+if(opt$genefile!="False"){
 
+  # Filter results
+  genelist = read.table(opt$genefile, header = F, sep="\t", stringsAsFactors = F)[,1]
+  data_out2_filtered = data_out2[data_out2[,2]%in%genelist,]
+  
+  # Write results
+  cat("#Analyzed samples: ", paste(mysamples, collapse = ", "), "\n", sep = "", file = paste(projectname, "_combined_GENELIST.txt", sep = ""), append = FALSE)
+  cat("#HOMO_HETEROZYGOUS: HOMOZYGOUS/HETEROZYGOUS CNV. Only the homozygous CNVs are specyfied like this: PROGRAM(TARGET_DETECTED_BY_THE_PROGRAM), otherwise it was detected as heterozygous.
+  #NUM_OF_TARGETS: Total number of targets detected
+  #TARGETS: All targets detected
+  #ED_TARGETS: Targets detected by ExomeDepth
+  #CN_TARGETS: Targets detected by CoNVaDING
+  #C2_TARGETS: Targets detected by CODEX2
+  #PM_TARGETS: Targets detected by Panelcn.MOPS
+  #NUM_OF_PROGRAMS: Number of programs that have detected at least the same target. The table is sorted descendingly following this column
+  #ED_BF: Bayes Factor (ExomeDepth)
+  #CN_ZSORE: Z-score (CoNVaDING)
+  #CN_SHAPIRO.WILK: Shapiro-Wilk test (CoNVaDING)
+  #C2_mBIC: Modified Bayesian Information Criterion (CODEX2)\n",
+  file = paste(projectname, "_combined_GENELIST.txt", sep = ""), append = TRUE)
+ 
+  if(!is.null(nrow(data_out2_filtered))){
+    write.table(data_out2_filtered, file = paste(projectname, "_combined_GENELIST.txt", sep = ""), sep = "\t", quote = FALSE, row.names = FALSE, append = TRUE)
+  }
+
+}

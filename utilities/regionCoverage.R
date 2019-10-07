@@ -47,7 +47,7 @@ for (n in 1:ncol(coverage)){
 
 colnames(df) = c("Sample", names(s), "Min.Cov.Test", "File")
 
-write.table(df, file=resultsFile, append = T, row.names = F, col.names = T, quote = F, sep="\t")
+write.table(df, file=resultsFile, row.names = F, col.names = T, quote = F, sep="\t")
 
 
 if (any(data.frame(df)$Min.Cov.Test=="FAILED")){
