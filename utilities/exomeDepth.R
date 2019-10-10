@@ -127,6 +127,7 @@ colnames(ExomeCount.mat) = sapply(colnames(my.counts), function(x) sub(".bam", "
 
 if(opt$samples!="all" && !all(samples %in% colnames(ExomeCount.mat))){
   cat('\nSome of the selected samples can not be found...\n')
+  
   }
 if(opt$samples=="all"){
   samples=colnames(ExomeCount.mat) 

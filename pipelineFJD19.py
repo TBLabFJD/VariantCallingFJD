@@ -77,7 +77,7 @@ def main():
 	parser.add_argument('-D', '--depth', help="Skip filtering of samples during CNV calling by read coverage.", required=False, action='store_true')
 	parser.add_argument('-w', '--window', help="125 window size for CNV intervals", required=False, action='store_true')
 	parser.add_argument('-B', '--remove_bam', help="Remove bam files", required=False, action='store_true')
-	parser.add_argument('-d', '--duplicates', help="Remove duplicates. By default, duplicates are just marked", required=False, action='store_true')
+	parser.add_argument('-d', '--duplicates', help="Data is not dedupped. By default, duplicates are just marked", required=False, action='store_true')
 	parser.add_argument('-u', '--basemountuser', help="Specify alternative basemount user", required=False, default=False)
 
 
@@ -523,6 +523,8 @@ def main():
 	# Copy Number Variant analysis
 
 	vdepCVjobs_list = []
+	jobidQC_list = []
+
 
 
 	if args.analysis=="cnv" or args.analysis=="all":
@@ -566,12 +568,13 @@ def main():
 					print method
 					sys.stdout.write("\n#########  JOB FOR QUALITY CONTROL OF PANEL FILE AND SAMPLES \n")
 					depJobs = ':'.join(depJobs_list)
-					jobidQC=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs)
+					jobidQC=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
+					jobidQC_list.append(jobidQC)
 					sys.stdout.write("JOB ID: %s\n" %(jobidQC))
 					sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 				elif method == "MA":
 					sys.stdout.write("\n#########  COMBINING CNV RESULTS FROM ALTERNATIVE METHODS \n")
-					depJobs = ':'.join(vdepCVjobs_list)
+					depJobs = ':'.join(vdepCVjobs_list+[jobidQC])
 					jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
 					vdepCVjobs_list.append(jobidMA)
 					sys.stdout.write("JOB ID: %s\n" %(jobidMA))
@@ -601,7 +604,7 @@ def main():
 		subprocess.call(myargs_remove, stdout= stdout_f, stderr = stderr_f)
 
 	else:
-		depJobs_list = jobid_list + jobid_list_snp + vdepCVjobs_list + cvcfjobs_list
+		depJobs_list = jobid_list + jobid_list_snp + jobidQC_list + vdepCVjobs_list + cvcfjobs_list
 		depJobs = ':'.join(depJobs_list)
 		job_name = "removeDirs_"+run
 		jobidREMOVE=sbatch(job_name, args.output, ' '.join(myargs_remove), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
@@ -634,7 +637,7 @@ def main():
 		sys.stdout.write("  SLURM JOB STATUS SUMMARY \n")
 		sys.stdout.write(".................................\n\n")
 
-		depJobs_list = jobid_list + jobid_list_snp + cvcfjobs_list + [jobidQC] + vdepCVjobs_list  + [jobidREMOVE]
+		depJobs_list = jobid_list + jobid_list_snp + cvcfjobs_list + jobidQC_list + vdepCVjobs_list  + [jobidREMOVE]
 		depJobs = ':'.join(depJobs_list)
 		job_name = "slurmSummary_"+run
 
