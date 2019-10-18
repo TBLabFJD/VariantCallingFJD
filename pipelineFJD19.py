@@ -1,10 +1,10 @@
+#!/usr/bin/env python
+
 #######################################################################
 # Script: Run FJD analysis for samples stored in basespace or locally
 # Author: Lorena de la Fuente 
 # Date: 24-01-2019
 #######################################################################
-
-#!/usr/bin/env python
 
 import sys
 import os
