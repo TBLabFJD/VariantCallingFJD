@@ -361,9 +361,9 @@ file = paste(projectname, "_combined.txt", sep = ""), append = TRUE)
 write.table(data_out2, file = paste(projectname, "_combined.txt", sep = ""), sep = "\t", quote = FALSE, row.names = FALSE, append = TRUE)
 
 # To Annotate table
-data_out_toAnnotate <- data.frame(data_out2$CHR, data_out2$START, data_out2$STOP, data_out2$CNV_TYPE, stringsAsFactors = FALSE)
-data_out_toAnnotate <-unique(data_out_toAnnotate)
-write.table(data_out_toAnnotate, file = paste(projectname, "_combined_toAnnotate.txt", sep = ""), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+#data_out_toAnnotate <- data.frame(data_out2$CHR, data_out2$START, data_out2$STOP, data_out2$CNV_TYPE, stringsAsFactors = FALSE)
+#data_out_toAnnotate <-unique(data_out_toAnnotate)
+#write.table(data_out_toAnnotate, file = paste(projectname, "_combined_toAnnotate.txt", sep = ""), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 # Extended bed File
 bedout <- bedFile_data

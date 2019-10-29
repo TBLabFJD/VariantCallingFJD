@@ -536,9 +536,9 @@ def main():
 
 
 		sys.stdout.write("Copy number variants calling with arguments:\n")
-		myargs_desc = ["SCRIPT", "OUTPUT DIR", "BAM DIRECTORY", "SAMPLES FILE", "RUN LABEL", "NUMBER THREADS", "PANEL BED FILE", "WINDOW", "utilities", "LOCAL", "METHODS", "SKIP COVERAGE FILTERING", "GENE LIST"]
+		myargs_desc = ["SCRIPT", "OUTPUT DIR", "BAM DIRECTORY", "SAMPLES FILE", "RUN LABEL", "NUMBER THREADS", "PANEL BED FILE", "WINDOW", "utilities", "LOCAL", "METHODS", "SKIP COVERAGE FILTERING", "GENE LIST", "GENOME"]
 		method = "QC,"+args.cnv_method+",MA"
-		myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method, str(args.depth), str(args.genefilter)]
+		myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method, str(args.depth), str(args.genefilter), str(args.genome)]
 
 		[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs_cnv[i])) for i in range(1,len(myargs_cnv))]
 		sys.stdout.write("BAM FILES:\n%s" %("\n".join(glob(bamF + '/*.bam'))))
@@ -561,7 +561,7 @@ def main():
 				depJobs_list = []
 	
 			for method in method.split(","):
-				myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method,  str(args.depth), str(args.genefilter)]
+				myargs_cnv = [utilitiesPath+"CNVdetectionINd.sh", args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), utilitiesPath, str(args.local), method,  str(args.depth), str(args.genefilter), str(args.genome)]
 				job_name = method+"_CNV_"+run
 
 				if method == "QC":
