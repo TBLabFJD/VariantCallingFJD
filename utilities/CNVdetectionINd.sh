@@ -19,6 +19,7 @@ local=$9
 methods=${10}
 depth=${11}
 genefilter=${12}
+genome=${13}
 
 
 
@@ -252,10 +253,7 @@ fi
 
 if echo "$methods" | grep -q "MA"; then
 
-
-
 	start=`date +%s`
-
 
 	printf "\nRunning CNV_result_mixer and gene filtering (optional)"
 	Rscript $utilitiesPath/CNV_result_mixer.R -o $MDAP -n $run -b $finalpanel -s $SAMPLEFILE -d $HCGVCFD -f $genefilter
@@ -271,8 +269,16 @@ if echo "$methods" | grep -q "MA"; then
 	fi
 
 	end=`date +%s`
+	runtime=$((end-start))
+	printf '\nExecuting time: '$runtime 
+	
 
+	start=`date +%s`
 
+	printf "\nTabulated CNV results to VCF format"
+	Rscript $utilitiesPath/CNV_tsv2vcf.sh $MDAP $run $genome
+
+	end=`date +%s`
 	runtime=$((end-start))
 	printf '\nExecuting time: '$runtime 
 

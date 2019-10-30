@@ -18,6 +18,10 @@ def filtergenes(myargs):
 
 	with open(myargs.input, "r") as variants:
 
+		first_line = variants.readline()
+		output.write(first_line)
+
+
 		for variant in variants:
 
 			if variant.strip().split("\t")[5] in geneList:
