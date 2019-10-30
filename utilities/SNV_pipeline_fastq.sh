@@ -341,61 +341,62 @@ if [ "$skipmapping" != "True" ]; then
 	printf '\nExecuting time: '$runtime 
 
 
-
-
-	printf "\n\n\n- MARKING DUPLICATES (PICARD)"
-	printf "\n--------------------------------\n"
-
-	#Selecting the duplicates reads from the mapped and sorted reads.
-	mkdir $DD
-	printf '\nmkdir dedupped_data'
-
 	mkdir $PRD
 	printf '\nmkdir metrics' 
 
-	start=`date +%s`
 
-	#Mark duplicates PICARD
 
 	if [ "$duplicates" != "True" ]; then
+
+
+		printf "\n\n\n- MARKING DUPLICATES (PICARD)"
+		printf "\n--------------------------------\n"
+
+		#Selecting the duplicates reads from the mapped and sorted reads.
+		mkdir $DD
+		printf '\nmkdir dedupped_data'
+
+		start=`date +%s`
+
+		#Mark duplicates PICARD
+
+		bambeforebqsr=$DD/dedupped_${sample}.bam
+		baibeforebqsr=$DD/dedupped_${sample}.bai
 
 		printf '\nStart picard MarkDuplicates '${sample}''
 		picard MarkDuplicates TMP_DIR=$TMP \
 		 I=$SD/sorted${sample}.bam \
-		 O=$DD/dedupped_${sample}.bam \
+		 O=$bambeforebqsr \
 		 M=$PRD/marked_dup_metrics_${sample}.txt \
 		 REMOVE_DUPLICATES=false \
 		 AS=SortOrder
 
+
+
+		if [ "$?" = "0" ]; then
+			printf '\nEXIT STATUS: 0'
+			printf  '\nPICARD MarkDuplicates '${sample}' DONE' 
+			rm $SD/sorted${sample}.bam
+
+
+		else
+			printf "\nERROR: PROBLEMS WITH MARKING DUPLICATES"
+			exit 1
+		fi
+
+
+		end=`date +%s`
+		runtime=$((end-start))
+		printf '\nExecuting time: '$runtime 
+
+
 	else
 
-		printf '\nStart picard MarkDuplicates (Duplicates are also removed) '${sample}''
-		picard MarkDuplicates TMP_DIR=$TMP \
-		 I=$SD/sorted${sample}.bam \
-		 O=$DD/dedupped_${sample}.bam \
-		 M=$PRD/marked_dup_metrics_${sample}.txt \
-		 REMOVE_DUPLICATES=true \
-		 AS=SortOrder
+		bambeforebqsr=$SD/sorted${sample}.bam 
+		baibeforebqsr=$SD/sorted${sample}.bai
+
+
 	fi
-	
-
-	if [ "$?" = "0" ]; then
-		printf '\nEXIT STATUS: 0'
-		printf  '\nPICARD MarkDuplicates '${sample}' DONE' 
-		rm $SD/sorted${sample}.bam
-
-
-	else
-		printf "\nERROR: PROBLEMS WITH MARKING DUPLICATES"
-		exit 1
-	fi
-
-
-	end=`date +%s`
-	runtime=$((end-start))
-	printf '\nExecuting time: '$runtime 
-
-
 
 
 
@@ -410,8 +411,8 @@ if [ "$skipmapping" != "True" ]; then
 	start=`date +%s`
 
 	picard BuildBamIndex TMP_DIR=$TMP \
-	 I=$DD/dedupped_${sample}.bam \
-	 O=$DD/dedupped_${sample}.bai
+	 I=$bambeforebqsr \
+	 O=$baibeforebqsr
 
 
 	if [ "$?" = "0" ]; then
@@ -451,7 +452,7 @@ if [ "$skipmapping" != "True" ]; then
 
 	gatk BaseRecalibrator --tmp-dir=$TMP \
 	-R $HG19/ucsc.hg19.fasta \
-	-I $DD/dedupped_${sample}.bam \
+	-I $bambeforebqsr \
 	--known-sites $HG19/dbsnp_138.hg19.vcf \
 	--known-sites $HG19/1000G_phase1.indels.hg19.sites.vcf \
 	--known-sites $HG19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf \
@@ -496,15 +497,15 @@ if [ "$skipmapping" != "True" ]; then
 
 	gatk ApplyBQSR --tmp-dir=$TMP \
 	-R $HG19/ucsc.hg19.fasta \
-	-I $DD/dedupped_${sample}.bam \
+	-I $bambeforebqsr \
 	--bqsr $RBQSRD/before_recalibrated_bqsr_data_${sample}.recal.table \
 	-O $bqsr_bamfile
 
 	if [ "$?" = "0" ]; then
 		printf '\nEXIT STATUS: 0'
 		printf  '\nGATK ApplyBQSR '${sample}' DONE'
-		rm $DD/dedupped_${sample}.bam
-		rm $DD/dedupped_${sample}.bai
+		rm $bambeforebqsr
+		rm $baibeforebqsr
 	else
 		printf "\nERROR: PROBLEMS WITH BQSR"
 		exit 1
