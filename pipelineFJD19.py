@@ -78,7 +78,7 @@ def main():
 	parser.add_argument('-w', '--window', help="125 window size for CNV intervals", required=False, action='store_true')
 	parser.add_argument('-B', '--remove_bam', help="Remove bam files", required=False, action='store_true')
 	parser.add_argument('-d', '--duplicates', help="Data is not dedupped. By default, duplicates are just marked", required=False, action='store_true')
-	parser.add_argument('-u', '--basemountuser', help="Specify alternative basemount user", required=False, default=False)
+	parser.add_argument('-u', '--basemountuser', help="Alternative basemount user", required=False, default=False)
 
 
 	fjd_start_time = time.time()

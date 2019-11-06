@@ -1,8 +1,8 @@
 #!/bin/sh
 
-################################
-### FJD pipeline - Haplotype ###
-################################
+#######################################################
+### FJD pipeline - Processing and Haplotype Calling ###
+#######################################################
 
 ### FJD PIPELINE ARGUMENTS:
 
@@ -40,7 +40,7 @@ printf "......................................................\n"
 if [ "$local" != "True" ]; then
 
 	module load python/gnu/4.4.7/2.7.3
-	module load bwa/0.7.15
+	module load bwa/0.7.17
 	module load samtools/1.9
 	module load picard/2.18.9
 	module load gatk/4.1.2.0
@@ -928,7 +928,7 @@ fi
 printf '\n\nVEP annotation...'
 
 perl $VEP \
---cache --offline --hgvs --refseq --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork $threads --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite \
+--cache --offline --hgvs --refseq --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork $threads --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite  --no_stats \
 --biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class \
 --canonical --vcf \
 --sift p --polyphen p --af --max_af \

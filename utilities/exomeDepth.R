@@ -77,6 +77,7 @@ if(opt$bed=="genome"){
 
 cat('\nTotal number of testing regions: ', nrow(myexons), '\n', sep = "")
 
+
 #reference.fasta <- '/home/lorena/floridaCluster/broad_bundle_hg19_v/ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta'
 
 
