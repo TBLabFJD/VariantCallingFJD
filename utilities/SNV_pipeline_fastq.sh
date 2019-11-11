@@ -1,8 +1,8 @@
 #!/bin/sh
 
-################################
-### FJD pipeline - Haplotype ###
-################################
+#################################################################
+### FJD pipeline - Preprocessing - Haplotype - Hard Filtering ###
+#################################################################
 
 ### FJD PIPELINE ARGUMENTS:
 
@@ -26,9 +26,8 @@ duplicates=${17}
 removebam=${18}
 genefilter=${19}
 user=${20}
-echo $user
 utilitiesPath=${21}
-echo $utilitiesPath
+
 
 printf "\n......................................................\n"
 printf "  MAPPING OR/AND SNV CALLING FOR SAMPLE $sample \n"
@@ -39,26 +38,16 @@ printf "......................................................\n"
 
 if [ "$local" != "True" ]; then
 
-	module load python/gnu/4.4.7/2.7.3
 	module load bwa/0.7.15
 	module load samtools/1.9
 	module load picard/2.18.9
 	module load gatk/4.1.2.0
-	module load vep/release95
 	module load bedtools/2.27.0
 	module load R
-	#module load plink
-	alias picard='java -jar /usr/local/bio/picard/2.18.9/picard.jar'
-	alias gatk='java -jar /usr/local/bio/GATK/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	#alias gatk3='java -jar /usr/local/bio/GATK/gatk-4.0.5.1/gatk-package-4.0.5.1-local.jar'
-	VEP="/usr/local/bio/vep/vep"
- 	FILTER_VEP='/usr/local/bio/vep/filter_vep'
-	VEP_CACHE='/usr/local/bio/vep/t/testdata/cache/homo_sapiens'
-	VEP_FASTA="/home/proyectos/bioinfo/references/VEPfasta/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
-	PLUGIN_DIR=/usr/local/bio/vep/plugins-95/VEP_plugins-release-95
-	PLUGIN_DBS="/home/proyectos/bioinfo/references/VEPdbs"
-	dbNSFP_DB="${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz"
-	CCS_DB="/home/proyectos/bioinfo/references/CCS/ccrs.autosomes.v2.20180420.bed.gz"
-
+	alias plink='/usr/local/bioinfo/plink/plink'
+	alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
+	alias gatk='java -jar /usr/local/bioinfo/gatk/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'
+	
 	softwareFile="${MDAP}/software_${run}.txt"
 	title="MAPPING"
 	if [ ! -f $softwareFile ] || [ `grep -q $title $softwareFile` ] ; then 
@@ -73,20 +62,12 @@ if [ "$local" != "True" ]; then
 
 else
 
-	export SFT=/mnt/genetica3/marius/pipeline_practicas_marius/software
+	export SFT=/mnt/genetica3/software
 	alias plink='$SFT/plink/plink'
-	alias bwa='$SFT/bwa/bwa'
+	alias bwa='$SFT/bwa-0.7.15/bwa'
 	alias samtools='$SFT/samtools/samtools'
 	alias picard='java -Xmx10g -jar $SFT/picard/build/libs/picard.jar'
 	alias gatk='java  -Xmx10g -jar $SFT/gatk/build/libs/gatk-package-4.0.6.0-22-g9d9484f-SNAPSHOT-local.jar'
-	VEP="${SFT}/variant_effect_predictor/ensembl-vep/vep"
-	FILTER_VEP="${SFT}/variant_effect_predictor/ensembl-vep/filter_vep"
-	VEP_CACHE='/mnt/genetica3/marius/pipeline_practicas_marius/software/variant_effect_predictor/.vep'
-	VEP_FASTA="${VEP_CACHE}/homo_sapiens/93_GRCh37/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa"
-	PLUGIN_DIR="${VEP_CACHE}/Plugins"
-	PLUGIN_DBS="${VEP_CACHE}/dbs"
-	dbNSFP_DB="${PLUGIN_DBS}/dbNSFP_hg19.gz"
-	#CCS_DB="/home/proyectos/bioinfo/references/CCS"
 
 	softwareFile="${MDAP}/software_${run}.txt"
 	title="MAPPING"
@@ -108,8 +89,6 @@ else
 		printf "\nGATK VERSION\n" >> ${softwareFile}
 		gatk ApplyBQSR 2>&1 | head -n4 | tail -n1 >> ${softwareFile}
 
-		printf "\nVEP VERSION\n" >> ${softwareFile}
-		$VEP --help | grep "Versions:" -A 5 | tail -n4 >> ${softwareFile}
 
 	fi
 
@@ -134,36 +113,28 @@ SD="${MDAP}/sorted_data"
 #Dedupped_data
 DD="${MDAP}/dedupped_data"
 
-#Recalibrated_base_quality_scores_data: generates a recalibration table  based on specified covariates, read_group,reported_quiality_score,machine_cycle and nucleotide_context, after GATK.
-RBQSRD="${MDAP}/recalibrated_bqsr_data"
-
-#First using the APPLIED_RECALIBRATION_BQSR_DATA BAM file, running again BaseRecalibrator and generating the plots with AnalyzeCovariates.
+# Duplication and recalibration table.
 PRD="${MDAP}/metrics"
-
 
 #Haplotype_caller_gvcf_data:calling for SNPs and indels via local re-assembly of HAPLOTYPES using HAPLOTYPECALLER by GATK.
 #Perform joint genotyping on one or more samples precalled with Haplotype_caller, if one sample,
 #straight after haplotypecaller and if more than one use Combine_gvcfs.
 HCGVCFD="${MDAP}/haplotype_caller_gvcf_data"
 
-
 #Genotyped_vcf_data: single or single-multisample GVCF as input, output will be a VCF.
 GVCFD="${MDAP}/genotyped_vcf_data"
 
-#HARD_FILTERING, filters for SNPs and filters for INDELs.
-#Variant_filtration_vcf_data:hard filtering process to select based on the INFO and FORMAT annotations(QD,MQO,FS,MQ,ReadPosrankSum)
-VFVCFD="${MDAP}/snv_results"
-
 # Hard filtering, vep filtering and vep annotation
 VEPVCFAD="${MDAP}/snv_results"
+
+# Preprocessed bam files
+ABQSRD="${MDAP}/bams"
 
 # LOH regions
 PLINK="${MDAP}/plink_results"
 
 TMP=$MDAP/tmp_${sample}
 mkdir $TMP
-
-
 
 
 
@@ -193,7 +164,6 @@ if [ "$skipmapping" != "True" ]; then
 	foward="${INPUT}/${sample}*_R1*.f*q.gz"
 	reverse="${INPUT}/${sample}*_R2*.f*q.gz"
 
-	ABQSRD="${MDAP}/bams"
 	bqsr_bamfile=${ABQSRD}/${sample}_alignment.bam
 	
 
@@ -251,7 +221,7 @@ if [ "$skipmapping" != "True" ]; then
 	if [ ! -f $HG19/ucsc.hg19.dict ]; then
 		printf '\nCREATE REFERENCE DICT!!!'
 		exit 0	
-		#Creating .DICT in HG19.
+		# Creating .DICT in HG19.
 		# printf 'Create .DICT file, using picardtools CreateSequnceDictionary'
 		# picard CreateSequenceDictionary R=$HG19/ucsc.hg19.fasta O=$HG19/ucsc.hg19.2.dict
 		# printf sampleFile 'ucsc.hg19.DICT DONE'
@@ -285,9 +255,6 @@ if [ "$skipmapping" != "True" ]; then
 	sm=$(echo  $header | head -n 1 | grep -Eo '[ATGCN]+$')
 	echo  -e "\nThis is how the new header looks\n"
 	echo  -e '@RG\tID:'$id'\tSM:'${sample}'\tLB:'$id'_'$sm'\tSM:'$id'_'$m'\tPL:ILLUMINA'
-
-	echo -e 'bwa mem -v 3 -t '$threads' -R @RG\tID:'$id'\tSM:'${sample}'\tLB:'$id'_'$sm'\tPL:ILLUMINA '$HG19'/ucsc.hg19.fasta'$foward$reverse'>'$MD'/mapped_'${sample}'.sam'
-
 
 	bwa mem -v 3 -t $threads -R '@RG\tID:'$id'\tSM:'${sample}'\tLB:'$id'_'$sm'\tPL:ILLUMINA' \
 	$HG19/ucsc.hg19.fasta \
@@ -442,7 +409,7 @@ if [ "$skipmapping" != "True" ]; then
 
 
 	#Recalibrating  the reads using base quality score reads.
-	mkdir $RBQSRD
+	mkdir $PRD
 	printf '\nmkdir recalibrated_bqsr_data' 
 
 	#GATK BaseRecalibration first table
@@ -456,7 +423,7 @@ if [ "$skipmapping" != "True" ]; then
 	--known-sites $HG19/dbsnp_138.hg19.vcf \
 	--known-sites $HG19/1000G_phase1.indels.hg19.sites.vcf \
 	--known-sites $HG19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf \
-	-O $RBQSRD/before_recalibrated_bqsr_data_${sample}.recal.table
+	-O $PRD/before_recalibrated_bqsr_data_${sample}.recal.table
 	#--bqsr 1st_racalibration.table
 
 
@@ -498,7 +465,7 @@ if [ "$skipmapping" != "True" ]; then
 	gatk ApplyBQSR --tmp-dir=$TMP \
 	-R $HG19/ucsc.hg19.fasta \
 	-I $bambeforebqsr \
-	--bqsr $RBQSRD/before_recalibrated_bqsr_data_${sample}.recal.table \
+	--bqsr $PRD/before_recalibrated_bqsr_data_${sample}.recal.table \
 	-O $bqsr_bamfile
 
 	if [ "$?" = "0" ]; then
@@ -546,7 +513,7 @@ if [ "$skipmapping" != "True" ]; then
 
 	printf   '\nGenerating Plots, pdf and csv files...'
 	gatk AnalyzeCovariates --tmp-dir=$TMP \
-	-before $RBQSRD/before_recalibrated_bqsr_data_${sample}.recal.table \
+	-before $PRD/before_recalibrated_bqsr_data_${sample}.recal.table \
 	-after $PRD/after_recalibrated_bqsr_data_${sample}.recal.table \
 	-csv $PRD/BQSR_${sample}.csv \
 	-plots $PRD/AnalyzeCovariates_bqsr_${sample}.pdf
@@ -554,7 +521,7 @@ if [ "$skipmapping" != "True" ]; then
 	#Obtaining an CSV and PDF file of the comparrisson between first and second pass of the recalibration applied to the bam
 
 	if [ "$?" = "0" ]; then
-		rm $RBQSRD/before_recalibrated_bqsr_data_${sample}.recal.table
+		rm $PRD/before_recalibrated_bqsr_data_${sample}.recal.table
 		printf '\nEXIT STATUS: 0'
 		printf '\nPlot and CSV file for '${sample}' is DONE!'
 		printf '\n Plots files generated --> DONE'
@@ -609,6 +576,7 @@ if [ "$intervals" != "True" ]; then
 	-I $bqsr_bamfile \
 	-ERC GVCF \
 	-O $HCGVCFD/${sample}.g.vcf \
+	-bamout $HCGVCFD/${sample}_bamout.bam \
 	-G StandardAnnotation \
 	-G AS_StandardAnnotation \
 	-G StandardHCAnnotation \
@@ -620,6 +588,7 @@ else
 	-I $bqsr_bamfile \
 	-ERC GVCF \
 	-O $HCGVCFD/${sample}.g.vcf \
+	-bamout $HCGVCFD/${sample}_bamout.bam \
 	-G StandardAnnotation \
 	-G AS_StandardAnnotation \
 	-G StandardHCAnnotation \
@@ -710,99 +679,18 @@ printf '\nExecuting time: '$runtime
 
 
 
-
-printf "\n\n\n- HARD FILTERING (classical way GATK)"
-printf "\n---------------------------------------\n"
-
-
-#HARD FILTERING
-#First step extacting the SNP's
-#Second step extracting the INDEL's
+printf "\n\n\n- VARIANT FILTERING "
+printf "\n-------------------------\n"
 
 
-mkdir $VFVCFD
-printf "mkdir snv_results\n"
+# CNN for single sample and Hard Filtering for trio/cohort
+
+#ftype="HF"
+ftype="CNN"
+
+$utilitiesPath/Variant_filtering.sh $local $ftype $MDAP $sample $HG19
 
 
-### SNPs
-
-#1.Extract the SNP's from the call set.
-#printf "\nExtract the SNP's from the call set."
-start=`date +%s`
-
-gatk SelectVariants --tmp-dir=$TMP \
--R $HG19/ucsc.hg19.fasta \
--V $GVCFD/genotyped_data_${sample}.vcf \
---select-type-to-include SNP \
--O $VFVCFD/selected_raw_snp_${sample}.vcf
-s1="$?"
-
-
-#2.Apply the filters to the SNP's callset.
-
-gatk VariantFiltration --tmp-dir=$TMP \
--R $HG19/ucsc.hg19.fasta \
--V $VFVCFD/selected_raw_snp_${sample}.vcf \
---filter-expression "QD < 2.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
---filter-name "my_SNP_filter" \
--O $VFVCFD/filtered_SNP_data_${sample}.vcf
-s2="$?"
-
-
-
-
-### INDELs
-
-#3. Extract the INDELS from the ORIGINAL call set.
-gatk SelectVariants --tmp-dir=$TMP \
--R $HG19/ucsc.hg19.fasta \
--V $GVCFD/genotyped_data_${sample}.vcf \
---select-type-to-include INDEL \
--O $VFVCFD/selected_raw_indels_${sample}.vcf
-s3="$?"
-
-
-
-#4.Apply the filters to the INDEL's callset.
-gatk VariantFiltration --tmp-dir=$TMP \
--R $HG19/ucsc.hg19.fasta \
--V $VFVCFD/selected_raw_indels_${sample}.vcf \
---filter-expression "QD < 2.0  || ReadPosRankSum < -20.0" \
---filter-name "my_INDEL_filter" \
--O $VFVCFD/filtered_INDEL_data_${sample}.vcf
-s4="$?"
-
-
-# Combine Variants after using SNPS and INDELS filtering into a single file and get it ready for annotation.
-
-gatk MergeVcfs --TMP_DIR=$TMP \
--R $HG19/ucsc.hg19.fasta \
--I $VFVCFD/filtered_SNP_data_${sample}.vcf \
--I $VFVCFD/filtered_INDEL_data_${sample}.vcf \
--O $VFVCFD/${sample}_raw.vcf
-s5="$?"
-
-
-
-if [ "$s1" = "0"  ] &&  [ "$s2" = "0" ] &&  [ "$s3" = "0" ] &&  [ "$s4" = "0" ] &&  [ "$s5" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf  '\nHARD FILTERING for '${sample}' DONE'
-
-	rm $GVCFD/genotyped_data_${sample}.vcf*
-	rm $VFVCFD/selected_raw_snp_${sample}.vcf*
-	rm $VFVCFD/filtered_SNP_data_${sample}.vcf*
-	rm $VFVCFD/selected_raw_indels_${sample}.vcf*
-	rm $VFVCFD/filtered_INDEL_data_${sample}.vcf*
-
-else
-	printf "\nERROR: PROBLEMS WITH HARD FILTERING"
-	exit 1
-fi
-
-
-end=`date +%s`
-runtime=$((end-start))
-printf '\nExecuting time: '$runtime 
 
 
 
@@ -816,9 +704,16 @@ fi
 
 
 
-# if not combined analysis we remove all g.vcfs
 
-#rm $HCGVCFD/${sample}*
+
+
+
+exit 0
+
+
+
+
+
 
 
 
@@ -829,16 +724,10 @@ printf "\n------------------------\n"
 
 start=`date +%s`
 
-if [ "$local" != "True" ]; then
-	module load plink/1.90beta
-	alias plink="/usr/local/bio/Plink/plink"
-fi 
-
-
 params="--allow-extra-chr --homozyg --homozyg-window-het 1 --vcf-filter"
 mkdir $PLINK
 
-plink $params --vcf $VFVCFD/${sample}_raw.vcf --out $PLINK/${sample} 1>&2
+plink $params --vcf $VEPVCFAD/${sample}_raw.vcf --out $PLINK/${sample} 1>&2
 
 
 if [ "$?" = "0"  ]; then
@@ -856,13 +745,6 @@ echo -e  '\nExecuting time: '$runtime
 
 
 
-if [ "$local" != "True" ]; then
-	module unload plink/1.90beta
-fi
-
-
-
-
 
 
 
@@ -873,149 +755,9 @@ printf "\n\n\n- VARIANT ANNOTATION (VEP - ENSEMBL) "
 printf "\n---------------------------------------\n"
 
 
-VCF_IN="${VFVCFD}/${sample}_raw.vcf"
-VCF_OUT="${VEPVCFAD}/${sample}_filtered.vcf"
+$utilitiesPath/VEP_annotation.sh $local $MDAP $sample $run $threads
 
-VCF_FILTERED="${VEPVCFAD}/${sample}_annotated.vcf"
-VCF_FILTERED_2="${VEPVCFAD}/${sample}_filtered_annotated_can_conseq.vcf"
-VCF_FILTERED_3="${VEPVCFAD}/${sample}_filteredAnnotated.vcf" 
-VCF_FINAL="${VEPVCFAD}/${sample}_filteredAnnotated.txt"
-VCF_FINAL_PVM="${VEPVCFAD}/${sample}_filteredAnnotated_pvm.txt"
 
-
-start=`date +%s`
-
-
-
-
-
-
-
-
-
-
-printf '\n\nFiltering by quality and chromosome...'
-
-perl $FILTER_VEP \
--i $VCF_IN -o $VCF_OUT \
---filter "QUAL > 100 and FILTER = PASS" \
---filter "CHROM in chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chr23,chrX,chrY" --force_overwrite 
-
-
-
-
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\nVEP FILTERING quality and chromosome for '${sample}' DONE\n' 
-
-else
-	printf "\nERROR: PROBLEMS WITH VEP FILTERING FOR QUALITY AND CHR"
-	exit 1
-fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-printf '\n\nVEP annotation...'
-
-perl $VEP \
---cache --offline --hgvs --refseq --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork $threads --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite \
---biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class \
---canonical --vcf \
---sift p --polyphen p --af --max_af \
---format vcf \
---pubmed \
---plugin dbscSNV,$PLUGIN_DBS/dbscSNV1.1_GRCh37.txt.gz \
---plugin LoFtool,$PLUGIN_DIR/LoFtool_scores.txt \
---plugin ExACpLI,$PLUGIN_DIR/ExACpLI_values.txt \
---plugin dbNSFP,${dbNSFP_DB},gnomAD_exomes_AF,gnomAD_exomes_NFE_AF,1000Gp3_AF,1000Gp3_EUR_AF,ExAC_AF,ExAC_EAS_AF,ExAC_NFE_AF,ExAC_Adj_AF,rs_dbSNP150,phyloP20way_mammalian,phyloP20way_mammalian_rankscore,phastCons20way_mammalian,phastCons20way_mammalian_rankscore,GERP++_RS,GERP++_RS_rankscore,LRT_pred,MutationTaster_pred,MutationAssessor_pred,FATHMM_pred,PROVEAN_pred,MetaLR_pred,MetaSVM_pred,M-CAP_pred,Interpro_domain,GTEx_V6p_gene,GTEx_V6p_tissue \
---plugin MaxEntScan,$PLUGIN_DBS/maxEntScan \
---custom ${PLUGIN_DBS}/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz,gnomADg,vcf,exact,0,AF_NFE,AF_Male,AF_Female,Hom,POPMAX,AF_POPMAX \
---custom ${PLUGIN_DBS}/Kaviar-160204-Public/vcfs/Kaviar-160204-Public-hg19.vcf.gz,kaviar,vcf,exact,0,AF,AC,AN \
---custom ${CCS_DB},gnomAD_exomes_CCR,bed,overlap,0,ccr_pct \
---plugin CADD,${PLUGIN_DBS}/InDels.tsv.gz,${PLUGIN_DBS}/whole_genome_SNVs.tsv.gz \
--i $VCF_OUT -o $VCF_FILTERED
-
-
-
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\nVEP ANNOTATION for '${sample}' DONE\n' 
-	rm $VCF_OUT
-
-else
-	printf "\nERROR: PROBLEMS WITH VEP ANNOTATION"
-	exit 1
-fi
-
-
-
-
-
-
-
-printf '\n\nFiltering by population frequencies...\n'
-
-perl $FILTER_VEP \
--i $VCF_FILTERED -o $VCF_FILTERED_2 \
---filter "DP > 10" \
---filter "CANONICAL is YES" \
---filter "Consequence is 3_prime_UTR_variant or Consequence is 5_prime_UTR_variant or Consequence is intron_variant or Consequence is splice_donor_variant or Consequence is splice_acceptor_variant or Consequence is splice_region_variant or Consequence is synonymous_variant or Consequence is missense_variant or Consequence is inframe_deletion or Consequence is inframe_insertion or Consequence is stop_gained or Consequence is frameshift_variant or Consequence is coding_sequence_variant" --force_overwrite 
-
-
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\n VEP FREQUENCY FILTERING 1 for '${sample}' DONE\n' 
-	rm $VCF_FILTERED
-
-else
-	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING 1"
-	exit 1
-fi
-
-
-
-
-
-
-
-perl $FILTER_VEP \
--i $VCF_FILTERED_2 -o $VCF_FILTERED_3 \
---filter "AF < 0.01 or not AF" \
---filter "(ExAC_EAS_AF < 0.01 or not ExAC_EAS_AF) and (1000Gp3_AF < 0.01 or not 1000Gp3_AF) and (1000Gp3_EUR_AF < 0.01 or not 1000Gp3_EUR_AF ) and (gnomAD_exomes_AF < 0.01 or not gnomAD_exomes_AF) and (ExAC_AF < 0.01 or not ExAC_AF) and (ExAC_Adj_AF < 0.01 or not ExAC_Adj_AF) and (ExAC_NFE_AF < 0.01 or not ExAC_NFE_AF) and (gnomAD_exomes_NFE_AF < 0.01 or not gnomAD_exomes_NFE_AF) and (gnomAD_genomes_AF < 0.01 or not gnomAD_genomes_AF)" --force_overwrite 
-
-
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\nVEP FREQUENCY FILTERING 2 for '${sample}' DONE\n' 
-	rm $VCF_FILTERED_2
-
-else
-	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING 2"
-	exit 1
-fi
-
-
-
-
-
-
-printf '\nVEP annotation and filtering DONE.\n'
-
-
-end=`date +%s`
-runtime=$((end-start))
-printf '\nExecuting time: '$runtime 
 
 
 
@@ -1025,13 +767,21 @@ printf '\nExecuting time: '$runtime
 printf "\n\n\n- OUTPUT PROCESSING "
 printf "\n------------------------\n"
 
+
+VCF_FILTERED_ANNOTATED="${VEPVCFAD}/${sample}_filteredAnnotated.vcf" 
+VCF_FINAL="${VEPVCFAD}/${name}_filteredAnnotated.txt"
+VCF_FINAL_PVM="${VEPVCFAD}/${name}_filteredAnnotated_pvm.txt"
+VCF_FINAL_PVM_FILTER="${VEPVCFAD}/${sample}_filteredAnnotated_pvm_GENELIST.txt"
+
+
+
 start=`date +%s`
 
 printf '\nFrom VEP annotated VCF to txt file...\n'
 start=`date +%s`
 
 
-python $utilitiesPath/vep2tsv_woFreq.py $VCF_FILTERED_3 \
+python $utilitiesPath/vep2tsv_woFreq.py $VCF_FILTERED_ANNOTATED \
 -o $VCF_FINAL -t -g -f GT,AD,DP
 
 if [ "$?" = "0" ]; then
@@ -1055,6 +805,12 @@ printf '\nExecuting time: '$runtime
 
 
 
+
+
+
+
+
+
 printf "\n\n\n- ADDING LOH INFO"
 printf "\n-----------------------\n"
 
@@ -1063,8 +819,6 @@ printf '\nAnnotating extra features...\n'
 start=`date +%s`
 
 #python $utilitiesPath/LOHmerge.py $PLINK/${sample}.hom $VCF_FINAL ${VCF_FINAL_PVM}
-
-echo python $utilitiesPath/PVM_Cluster.py $VCF_FINAL -l $local -k $PLINK/${sample}.hom -o ${VCF_FINAL_PVM} -P $pathology
 
 python $utilitiesPath/PVM_Cluster.py $VCF_FINAL -l $local -k $PLINK/${sample}.hom -o ${VCF_FINAL_PVM} -P $pathology
 
@@ -1087,6 +841,25 @@ printf '\nExecuting time: '$runtime
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+print "\n\n\n- FILTERING BASED ON GENE LIST (VEP - ENSEMBL) "
+printf "\n---------------------------------------\n"
+
+
+
 # Filter PVM files based on gene list
 
 if [ "$genefilter" != "False" ]; then
@@ -1094,7 +867,6 @@ if [ "$genefilter" != "False" ]; then
 
 	start=`date +%s`
 
-	VCF_FINAL_PVM_FILTER="${VEPVCFAD}/${sample}_filteredAnnotated_pvm_GENELIST.txt"
 	
 	python $utilitiesPath/filtering_geneList.py -i ${VCF_FINAL_PVM} -f ${genefilter} -o ${VCF_FINAL_PVM_FILTER}
 
@@ -1117,14 +889,13 @@ fi
 
 
 
+
+
+
 # Remove temporary files.
 
 printf '\n'
 rm -r $TMP
-
-
-
-
 
 
 

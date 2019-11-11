@@ -33,7 +33,7 @@ if [ "$local" != "True" ]; then
 	module load vep/release95
 	module load bedtools/2.27.0
 	module load R
-	#module load plink
+	alias plink='/usr/local/bioinfo/plink/plink'
 	alias picard='java -jar /usr/local/bio/picard/2.18.9/picard.jar'
 	alias gatk='java -jar /usr/local/bio/GATK/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	#alias gatk3='java -jar /usr/local/bio/GATK/gatk-4.0.5.1/gatk-package-4.0.5.1-local.jar'
 	alias bcftoolsl="/home/proyectos/bioinfo/software/bcftools-1.9/bcftools"
@@ -113,10 +113,7 @@ CGVCFD="${MDAP}/combined_gvcf_data"
 #Genotyped_vcf_data: single or single-multisample GVCF as input, output will be a VCF.
 GVCFD="${MDAP}/genotyped_vcf_data"
 	
-#Variant_filtration_vcf_data:hard filtering process to select based on the INFO and FORMAT annotations(QD,MQO,FS,MQ,ReadPosrankSum)
-VFVCFD="${MDAP}/snv_results"
-
-#Vep_vcf_annotated_data: annotations added to the CSQ tag in INFO columnd to the VCF format.
+#Hard filtering, vep filtering and vep annotation
 VEPVCFAD="${MDAP}/snv_results"
 
 # LOH regions
@@ -234,7 +231,7 @@ echo -e "-----------------------------\n"
 #Second step extracting the INDEL's
 
 
-mkdir $VFVCFD
+mkdir $VEPVCFAD
 echo -e  "mkdir snv_results"
 
 start=`date +%s`
@@ -248,16 +245,16 @@ gatk SelectVariants --tmp-dir=$TMP \
 -R $HG19/ucsc.hg19.fasta \
 -V $GVCFD/genotyped_data_$run.vcf \
 --select-type-to-include SNP \
--O $VFVCFD/selected_raw_snp_$run.vcf
+-O $VEPVCFAD/selected_raw_snp_$run.vcf
 s1="$?"
 
 	#2.Apply the filters to the SNP's callset.
 gatk VariantFiltration --tmp-dir=$TMP \
 -R $HG19/ucsc.hg19.fasta \
--V $VFVCFD/selected_raw_snp_$run.vcf \
+-V $VEPVCFAD/selected_raw_snp_$run.vcf \
 --filter-expression "QD < 2.0  || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
 --filter-name "my_SNP_filter" \
--O $VFVCFD/filtered_SNP_data_$run.vcf
+-O $VEPVCFAD/filtered_SNP_data_$run.vcf
 s2="$?"
 
 ### INDELs
@@ -268,24 +265,24 @@ gatk SelectVariants --tmp-dir=$TMP \
 -R $HG19/ucsc.hg19.fasta \
 -V $GVCFD/genotyped_data_$run.vcf \
 --select-type-to-include INDEL \
--O $VFVCFD/selected_raw_indels_$run.vcf
+-O $VEPVCFAD/selected_raw_indels_$run.vcf
 s3="$?"
 
 	#4.Apply the filters to the INDEL's callset.
 gatk VariantFiltration --tmp-dir=$TMP \
 -R $HG19/ucsc.hg19.fasta \
--V $VFVCFD/selected_raw_indels_$run.vcf \
+-V $VEPVCFAD/selected_raw_indels_$run.vcf \
 --filter-expression "QD < 2.0  || ReadPosRankSum < -20.0" \
 --filter-name "my_INDEL_filter" \
--O $VFVCFD/filtered_INDEL_data_$run.vcf
+-O $VEPVCFAD/filtered_INDEL_data_$run.vcf
 s4="$?"
 
 # 5. Combine Variants after using SNPS and INDELS filtering into a single file and get it ready for annotation.
 gatk MergeVcfs --TMP_DIR=$TMP \
 -R $HG19/ucsc.hg19.fasta \
--I $VFVCFD/filtered_SNP_data_$run.vcf \
--I $VFVCFD/filtered_INDEL_data_$run.vcf \
--O $VFVCFD/raw_$run.vcf
+-I $VEPVCFAD/filtered_SNP_data_$run.vcf \
+-I $VEPVCFAD/filtered_INDEL_data_$run.vcf \
+-O $VEPVCFAD/raw_$run.vcf
 s5="$?"
 
 
@@ -301,10 +298,10 @@ if [ "$s1" = "0"  ] &&  [ "$s2" = "0" ] &&  [ "$s3" = "0" ] &&  [ "$s4" = "0" ] 
 
 	rm $HCGVCFD/my_list_of_gvcfs_files_to_combine_$run.list
 	rm $GVCFD/genotyped_data_$run.vcf*
-	rm $VFVCFD/selected_raw_snp_${run}.vcf*
-	rm $VFVCFD/filtered_SNP_data_${run}.vcf*
-	rm $VFVCFD/selected_raw_indels_${run}.vcf*
-	rm $VFVCFD/filtered_INDEL_data_${run}.vcf*
+	rm $VEPVCFAD/selected_raw_snp_${run}.vcf*
+	rm $VEPVCFAD/filtered_SNP_data_${run}.vcf*
+	rm $VEPVCFAD/selected_raw_indels_${run}.vcf*
+	rm $VEPVCFAD/filtered_INDEL_data_${run}.vcf*
 
 
 else
@@ -330,11 +327,11 @@ echo -e  "\n\n\n- Split VCF into single-sample VCFs "
 echo -e  "---------------------------------------------\n"
 
 
-for samplee in `bcftoolsl query -l $VFVCFD/raw_${run}.vcf`
+for samplee in `bcftoolsl query -l $VEPVCFAD/raw_${run}.vcf`
 do
 	gatk SelectVariants --exclude-non-variants -R $HG19/ucsc.hg19.fasta \
-	-V $VFVCFD/raw_${run}.vcf \
-	-O $VFVCFD/${samplee}_raw.vcf -sn $samplee --exclude-non-variants
+	-V $VEPVCFAD/raw_${run}.vcf \
+	-O $VEPVCFAD/${samplee}_raw.vcf -sn $samplee --exclude-non-variants
 
 done 
 
@@ -360,19 +357,14 @@ echo -e  "-------------------------\n"
 
 start=`date +%s`
 
-if [ "$local" != "True" ]; then
-	module load plink/1.90beta
-	alias plink="/usr/local/bio/Plink/plink"
-fi 
-
 
 params="--allow-extra-chr --homozyg --homozyg-window-het 1 --vcf-filter"
 mkdir $PLINK
 
 
-for samplee in `bcftoolsl query -l $VFVCFD/raw_${run}.vcf`
+for samplee in `bcftoolsl query -l $VEPVCFAD/raw_${run}.vcf`
 do
-	plink $params --vcf $VFVCFD/${samplee}_raw.vcf --out $PLINK/${samplee} 1>&2
+	plink $params --vcf $VEPVCFAD/${samplee}_raw.vcf --out $PLINK/${samplee} 1>&2
 
 	if [ "$?" != "0"  ]; then
 		echo -e  "ERROR: PROBLEMS WITH PLINK"
@@ -383,7 +375,7 @@ do
 	rm $PLINK/${samplee}.*
 
 	if [ "$single" != "True" ]; then
-		rm $VFVCFD/${samplee}_raw.vcf
+		rm $VEPVCFAD/${samplee}_raw.vcf
 	fi
 
 done 
@@ -401,11 +393,6 @@ end=`date +%s`
 runtime=$((end-start))
 echo -e  '\nExecuting time: '$runtime 
 
-
-
-if [ "$local" != "True" ]; then
-	module unload plink/1.90beta
-fi
 
 
 
@@ -430,9 +417,9 @@ if [ "$ped" != "null" ]; then
 
 	gatk CalculateGenotypePosteriors \
 	   -R $HG19/ucsc.hg19.fasta \
-	   -V $VFVCFD/raw_$run.vcf \
+	   -V $VEPVCFAD/raw_$run.vcf \
 	   -ped $ped \
-	   -O $VFVCFD/filtered_INDEL_SNP_data_GP_$run.vcf \
+	   -O $VEPVCFAD/filtered_INDEL_SNP_data_GP_$run.vcf \
 	   --skip-population-priors  
 	s1="$?"
 
@@ -440,10 +427,10 @@ if [ "$ped" != "null" ]; then
 	# Filter variants based on GQ: genotypes with GQ < 20 based on the posteriors are flagged for posterior filtering. 
 	gatk VariantFiltration \
 	-R $HG19/ucsc.hg19.fasta \
-	-V $VFVCFD/filtered_INDEL_SNP_data_GP_$run.vcf \
+	-V $VEPVCFAD/filtered_INDEL_SNP_data_GP_$run.vcf \
 	--filter-expression "GQ < 20" \
 	--filter-name "lowGQ" \
-	-O $VFVCFD/filtered_INDEL_SNP_data_GP_GQfiltered_$run.vcf 
+	-O $VEPVCFAD/filtered_INDEL_SNP_data_GP_GQfiltered_$run.vcf 
 	s2="$?"
 
 
@@ -451,8 +438,8 @@ if [ "$ped" != "null" ]; then
 
 	gatk VariantAnnotator \
 		-R $HG19/ucsc.hg19.fasta \
-		-V $VFVCFD/filtered_INDEL_SNP_data_GP_GQfiltered_$run.vcf  \
-		-O $VFVCFD/filtered_INDEL_SNP_data_GP_GQfiltered_DeNovoAnnot_$run.vcf \
+		-V $VEPVCFAD/filtered_INDEL_SNP_data_GP_GQfiltered_$run.vcf  \
+		-O $VEPVCFAD/filtered_INDEL_SNP_data_GP_GQfiltered_DeNovoAnnot_$run.vcf \
 		-A PossibleDeNovo  \
 		-A StrandBiasBySample  \
 		-A AS_FisherStrand \
@@ -462,14 +449,14 @@ if [ "$ped" != "null" ]; then
 	s3="$?"
 
 
-	VCF_IN="${VFVCFD}/filtered_INDEL_SNP_data_GP_GQfiltered_DeNovoAnnot_$run.vcf"
+	VCF_IN="${VEPVCFAD}/filtered_INDEL_SNP_data_GP_GQfiltered_DeNovoAnnot_$run.vcf"
 
 
 	if [ "$s1" = "0"  ] &&  [ "$s2" = "0" ] &&  [ "$s3" = "0" ] ; then
 		echo -e  '\nEXIT STATUS: 0'
 		echo -e '\nPosterior genotyping and de novo mutations annotation DONE\n'
-		rm  $VFVCFD/filtered_INDEL_SNP_data_GP_$run.vcf*
-		rm  $VFVCFD/filtered_INDEL_SNP_data_GP_GQfiltered_$run.vcf* 
+		rm  $VEPVCFAD/filtered_INDEL_SNP_data_GP_$run.vcf*
+		rm  $VEPVCFAD/filtered_INDEL_SNP_data_GP_GQfiltered_$run.vcf* 
 
 	else
 		echo -e  "ERROR: PROBLEMS WITH posterior genotyping and de novo mutations annotation"
@@ -487,7 +474,7 @@ else
 
 	echo -e "\n NOT INPUT PED FILE: genotype posterior calculation skipped"
 
-	VCF_IN="${VFVCFD}/raw_${run}.vcf"
+	VCF_IN="${VEPVCFAD}/raw_${run}.vcf"
 
 
 fi
@@ -551,7 +538,7 @@ echo -e '\n\nVEP annotation...'
 
 perl $VEP \
 --cache --offline --hgvs --refseq --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork 16 --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite \
---biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class \
+--biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class --no_stats \
 --canonical --vcf \
 --sift p --polyphen p --af --max_af \
 --format vcf \

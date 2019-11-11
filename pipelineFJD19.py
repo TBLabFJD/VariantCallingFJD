@@ -22,7 +22,7 @@ utilitiesPath =  os.path.dirname(os.path.realpath(__file__))+"/utilities/"
 sys.path.insert(0, utilitiesPath)
 
 
-def sbatch(job_name, folder_out, command, mem=5, time=400, threads=5, mail=None, dep='', wait = '', typedep=None):
+def sbatch(job_name, folder_out, command, mem=5, time=400, threads=1, mail=None, dep='', wait = '', typedep=None):
 
 	if dep != '':
 		if typedep!=None:
@@ -68,6 +68,7 @@ def main():
 	parser.add_argument('-m', '--mail', help='\t\tMail account', required=False)
 	parser.add_argument('-S', '--single' , help='\t\tConserve sample VCFs when running combined genotyping (CVCF)', required=False, action='store_true')
 	parser.add_argument('-k', '--skipMapping', help='\t\tOption to skip mapping. Input folder must be fastq folder and Output folder the global output folder', action='store_true')
+	parser.add_argument('-vep', help="Running VEP from VCF file.", required=False, default=False)
 	parser.add_argument('-g', '--genome', help='\t\tLocal directory for genome reference file', required=False)
 	parser.add_argument('-e', '--pedigree', help='\t\tPedigree file. Combined genotyping will be run automatically', required=False)
 	parser.add_argument('-v', '--version', help="Display program version number.", action='version', version='1.0')
@@ -79,6 +80,9 @@ def main():
 	parser.add_argument('-B', '--remove_bam', help="Remove bam files", required=False, action='store_true')
 	parser.add_argument('-d', '--duplicates', help="Data is not dedupped. By default, duplicates are just marked", required=False, action='store_true')
 	parser.add_argument('-u', '--basemountuser', help="Specify alternative basemount user", required=False, default=False)
+
+	
+
 
 
 	fjd_start_time = time.time()
@@ -108,13 +112,18 @@ def main():
 
 
 
+	## basespace option not possible for bam files
+	
+	if args.skipMapping and args.basespace:
+		sys.stderr.write("ERROR: Bam files can not be retrieved from BaseSpace \n")
+		sys.exit()
+
+
 
 	## pipeline starts
 
 	sys.stdout.write("\nFJD ANALYSIS\n")
 	sys.stdout.write("\nChecking arguments...\n")
-
-
 
 
 
@@ -175,9 +184,6 @@ def main():
 		if not os.path.isfile(args.pedigree): 
 			sys.stderr.write("ERROR: Panel file '%s' does not exist\n" %(args.pedigree))
 			sys.exit()
-		# else:
-		# 	args.pedigree=os.path.realpath(args.pedigree)
-		# 	args.cvcf=True # combined genotyping
 	else:
 		args.pedigree="null"
 
@@ -209,14 +215,6 @@ def main():
 
 
 
-
-
-
-	## basespace option not possible for bam files
-	
-	if args.skipMapping and args.basespace:
-		sys.stderr.write("ERROR: Bam files can not be retrieved from BaseSpace \n")
-		sys.exit()
 
 
 	# checking if correct csv method
@@ -398,7 +396,6 @@ def main():
 		if args.local:
 			inputDir = args.output + '/tmp_joinedFastq/'
 		else:	
-			#inputDir = args.output + '/tmp_joinedFastq/'
 			inputDir = '/scratch/' + os.environ["USER"] + '/' + run + '/'
 		if not os.path.exists(inputDir):
 			os.makedirs(inputDir)
@@ -447,7 +444,7 @@ def main():
 					sys.stdout.write("\nAnalysing individual sample '%s' (%s) with arguments:\n\n" %(sample_name, sampleAnalysis))
 					
 					myargs_desc = ["SCRIPT", "INPUT FOLDER", "OUTPUT DIR", "SAMPLE LABEL", "N THREADS", "RUN LABEL", "PANEL BED FILE", "BASESPACE DOWNLOAD", "CONCATENATION", "INPUT DIRECTORY", "ANALYSIS TYPE", "COMBINED VCF", "SKIPPING MAPPING STEP", "GENOME BUNDLE", "LOCAL", "PATHOLOGY", "INTERVALS", "REMOVE DUPLICATES", "REMOVE BAM FILES", "GENE LIST", "BASESPACE USER", "utilities"]
-					myargs = [utilitiesPath+"SNV_pipeline_fastq.sh", args.input, args.output, sample_name, str(args.threads), run, args.panel, str(args.basespace), str(cat), inputDir, sampleAnalysis, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.pathology), str(args.intervals), str(args.duplicates), str(removebam), str(args.genefilter), str(args.basemountuser) ,utilitiesPath]
+					myargs = [utilitiesPath+"SNV_pipeline_fastq_ubam.sh", args.input, args.output, sample_name, str(args.threads), run, args.panel, str(args.basespace), str(cat), inputDir, sampleAnalysis, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.pathology), str(args.intervals), str(args.duplicates), str(removebam), str(args.genefilter), str(args.basemountuser) ,utilitiesPath]
 					[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs[i])) for i in range(1,len(myargs)-1)]
 					job_name =  sampleAnalysis+"_"+sample_name
 					sys.stdout.write("JOB NAME: %s\n" %(job_name))
@@ -457,7 +454,6 @@ def main():
 					if args.local:	# LOCAL
 						stdout_f = open(args.output+"/"+job_name+".out", 'w')
 						stderr_f = open(args.output+"/"+job_name+".err", 'w')
-						print(myargs)
 						subprocess.call(myargs, stdout=stdout_f, stderr=stderr_f)
 					
 					elif sampleAnalysis=="mapping": # SBATCH AND SAVE JOB IDS FOR MAPPING SAMPLES
@@ -646,17 +642,6 @@ def main():
 		jobidSUM=sbatch(job_name, args.output, ' '.join(myargs_summary), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
 		sys.stdout.write("JOB ID: %s\n" %(jobidSUM))
 		sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
-
-	
-
-
-
-
-
-
-
-
-
 
 
 
