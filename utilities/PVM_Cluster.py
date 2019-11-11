@@ -243,7 +243,7 @@ with open(args.input_file, "r") as snp:
 	
 	samples = [x.split("_")[0] for x in fields if x[-3:] == "_GT"]
 	
-	header= "\t".join(fields[0:4]+["Chr:Start-end"]+[fields[4]]+["gene_full_name"]+fields[6:11]+["Genomic_region"]+fields[11:13]+["CANONICAL"]+fields[14:26]+["NIM_Disease"]+fields[26:70]+["spanish_freq"]+fields[70:-3]+[s + "_VF" for s in samples] + fields[-3:] + [s + "_LOH" for s in samples])
+	header= "\t".join(fields[0:4]+["Chr:Start-end"]+[fields[4]]+["gene_full_name"]+fields[6:11]+["Genomic_region"]+fields[11:13]+["CANONICAL"]+fields[14:26]+["NIM_Disease"]+fields[26:70]+["spanish_freq"]+fields[70:-2]+[s + "_VF" for s in samples] + fields[-2:] + [s + "_LOH" for s in samples])
 	output.write(header + "\n")
 	
 	for line in snp:
@@ -283,11 +283,13 @@ with open(args.input_file, "r") as snp:
 		
 		# Find Variant Frequency
 		
-		myvf=[]
+		my_vf_list=[]
 		myloh=[]
 		for sample in samples:
 			# vf_dict['vf_lst_%s' % sample] = []
 			
+			myvf=[]
+
 			ad_field = sample + '_AD'
 			dp_field = sample + '_DP'
 			vf_field = sample + '_VF'
@@ -303,7 +305,10 @@ with open(args.input_file, "r") as snp:
 
 					vfs = (float(ad_split[i]) / float(dp_value)) *100
 					myvf.append(str(vfs))
-		
+			
+			myvf = ",".join(myvf)
+			my_vf_list.append(myvf)
+
 		# Find homozygosity regions
 		
 			if sample in chrDicc:
@@ -311,6 +316,11 @@ with open(args.input_file, "r") as snp:
 				myloh.append(str(x))
 			else:
 				myloh.append("False")
+
+		
+		
+			
+
 
 		# Get Spanish Frequencies:
 
@@ -328,7 +338,7 @@ with open(args.input_file, "r") as snp:
 
 
 
-		fline= "\t".join(linesplit[0:4]+my_chr_start_end+[linesplit[4]]+my_full_name+linesplit[6:11]+regions+linesplit[11:13]+my_canonical+linesplit[14:26]+my_Disease+linesplit[26:70]+spanish_freq_list+linesplit[70:-3]+myvf+linesplit[-3:]+myloh)
+		fline= "\t".join(linesplit[0:4]+my_chr_start_end+[linesplit[4]]+my_full_name+linesplit[6:11]+regions+linesplit[11:13]+my_canonical+linesplit[14:26]+my_Disease+linesplit[26:70]+spanish_freq_list+linesplit[70:-2]+my_vf_list+linesplit[-2:]+myloh)
 		output.write(fline + "\n")
 
 
