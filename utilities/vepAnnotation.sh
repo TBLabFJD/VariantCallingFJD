@@ -24,22 +24,24 @@ printf "......................................................\n"
 
 if [ "$local" != "True" ]; then
 
-	module load python/gnu/4.4.7/2.7.3
+	module load perl
+	module load miniconda/2.7
 	module load bwa/0.7.15
 	module load samtools/1.9
 	module load picard/2.18.9
 	module load gatk/4.1.2.0
-	module load vep/release95
+	module load vep/release98
 	module load bedtools/2.27.0
 	module load R
-	#module load plink
-	alias picard='java -jar /usr/local/bio/picard/2.18.9/picard.jar'
-	alias gatk='java -jar /usr/local/bio/GATK/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	#alias gatk3='java -jar /usr/local/bio/GATK/gatk-4.0.5.1/gatk-package-4.0.5.1-local.jar'
-	VEP="/usr/local/bio/vep/vep"
- 	FILTER_VEP='/usr/local/bio/vep/filter_vep'
-	VEP_CACHE='/usr/local/bio/vep/t/testdata/cache/homo_sapiens'
+	alias plink='/usr/local/bioinfo/plink/plink'
+	alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
+	alias gatk='java -jar /usr/local/bioinfo/gatk/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'
+
+	VEP="/usr/local/bioinfo/vep/ensembl-vep/vep"
+	FILTER_VEP='/usr/local/bioinfo/vep/ensembl-vep/filter_vep'
+	VEP_CACHE='/usr/local/bioinfo/vep/ensembl-vep/t/testdata/cache/homo_sapiens'
 	VEP_FASTA="/home/proyectos/bioinfo/references/VEPfasta/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
-	PLUGIN_DIR=/usr/local/bio/vep/plugins-95/VEP_plugins-release-95
+	PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep/Plugins
 	PLUGIN_DBS="/home/proyectos/bioinfo/references/VEPdbs"
 	dbNSFP_DB="${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz"
 	CCS_DB="/home/proyectos/bioinfo/references/CCS/ccrs.autosomes.v2.20180420.bed.gz"

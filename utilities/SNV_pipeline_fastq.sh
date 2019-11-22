@@ -42,7 +42,7 @@ if [ "$local" != "True" ]; then
 	module load samtools/1.9
 	module load picard/2.18.9
 	module load gatk/4.1.2.0
-	module load vep/release95
+	module load vep/release98
 	module load bedtools/2.27.0
 	module load R
 	alias plink='/usr/local/bioinfo/plink/plink'
@@ -53,10 +53,11 @@ if [ "$local" != "True" ]; then
 	FILTER_VEP='/usr/local/bioinfo/vep/ensembl-vep/filter_vep'
 	VEP_CACHE='/usr/local/bioinfo/vep/ensembl-vep/t/testdata/cache/homo_sapiens'
 	VEP_FASTA="/home/proyectos/bioinfo/references/VEPfasta/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
-	PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep/plugins-95/VEP_plugins-release-95
+	PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep/Plugins
 	PLUGIN_DBS="/home/proyectos/bioinfo/references/VEPdbs"
 	dbNSFP_DB="${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz"
 	CCS_DB="/home/proyectos/bioinfo/references/CCS/ccrs.autosomes.v2.20180420.bed.gz"
+
 
 	softwareFile="${MDAP}/software_${run}.txt"
 	title="MAPPING"
