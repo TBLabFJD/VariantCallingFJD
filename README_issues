@@ -1,0 +1,17 @@
+
+# mapping job name: mapping_mapping_12-2502.out --> CHANGE
+# check if the number of GB input by user is just for VEP o for every step!!!
+
+
+
+
+NOVEDADES VERSIÓN:
+
+- New bamout option
+- Remove GVCF generation
+- CNN implementation
+- New GATK version
+- Includes MAF
+- New VEP filterings and new raw VCF definition - DONE
+- New QC with mosdepth at the beggining and save results
+- TRIO analysis with CNN or HF ?¿
