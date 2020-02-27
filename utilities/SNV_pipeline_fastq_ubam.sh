@@ -420,7 +420,7 @@ if [ "$skipmapping" != "True" ]; then
 		if [ "$?" = "0" ]; then
 			printf '\nEXIT STATUS: 0'
 			printf  '\nPICARD MarkDuplicates '${sample}' DONE' 
-			rm $MD/mapped_merged_${sample}.bam
+			#rm $MD/mapped_merged_${sample}.bam
 
 		else
 			printf "\nERROR: PROBLEMS WITH MARKING DUPLICATES"

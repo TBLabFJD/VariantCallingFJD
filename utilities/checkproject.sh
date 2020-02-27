@@ -33,7 +33,7 @@ for job in $jobs; do
 	jobname=`sacct -j $job --format="JobName%50" --noheader | head -n1 | sed 's/ //g'`
 	status=`sacct -j $job --format="State" --noheader | head -n1  | sed 's/ //g'`
 	exitstatus=`sacct -j $job --format="ExitCode" --noheader | head -n1 | sed 's/ //g'`
-	time=`sacct -j $job --format="CPUTime" --noheader | head -n1 | sed 's/ //g'`
+	time=`sacct -j $job --format="Elapsed" --noheader | head -n1 | sed 's/ //g'`
 	node=`sacct -j $job --format="NodeList" --noheader | head -n1 | sed 's/ //g'`
 
 

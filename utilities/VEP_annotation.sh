@@ -25,7 +25,7 @@ if [ "$local" != "True" ]; then
 
 	VEP="/usr/local/bioinfo/vep/ensembl-vep/vep"
 	FILTER_VEP='/usr/local/bioinfo/vep/ensembl-vep/filter_vep'
-	VEP_CACHE='/usr/local/bioinfo/vep/ensembl-vep/t/testdata/cache/homo_sapiens'
+	VEP_CACHE='/usr/local/bioinfo/vep/ensembl-vep/t/testdata/cache/homo_sapiens/'
 	VEP_FASTA="/home/proyectos/bioinfo/references/VEPfasta/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
 	PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep/plugins-95/VEP_plugins-release-95
 	PLUGIN_DBS="/home/proyectos/bioinfo/references/VEPdbs"
