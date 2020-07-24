@@ -1,0 +1,144 @@
+Durante la inicializaci?n - Warning message:
+Setting LC_CTYPE failed, using "C" 
+Loading required package: Rsamtools
+Loading required package: GenomeInfoDb
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: GenomicRanges
+Loading required package: Biostrings
+Loading required package: XVector
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: BSgenome.Hsapiens.UCSC.hg19
+Loading required package: BSgenome
+Loading required package: rtracklayer
+
+Attaching package: 'CODEX2'
+
+The following object is masked from 'package:BiocGenerics':
+
+    normalize
+
+Warning message:
+package 'CODEX2' was built under R version 3.5.1 
+Excluded 15326 exons due to extreme coverage.
+Excluded 8927 exons due to extreme exonic length.
+Excluded 7705 exons due to extreme mappability.
+Excluded 261 exons due to extreme GC content.
+After taking union, excluded 27679 out of 181528 exons in QC.
+Computing normalization with k = 1 latent factors ...
+Iteration 1	beta diff =0.163	f(GC) diff =1.06e-10
+Iteration 2	beta diff =0.0234	f(GC) diff =1.26e-13
+Iteration 3	beta diff =0.000512	f(GC) diff =1.44e-15
+Iteration 4	beta diff =3.56e-05	f(GC) diff =8.58e-16
+Stop at Iteration 4.
+AIC1 = 9465811869.222
+BIC1 = 9464487362.056
+RSS1 = 265.542
+
+	AIC1 = 12077787844.533
+	BIC1 = 12075569682.96
+	RSS1 = 259.268
+
+Computing normalization with k = 2 latent factors ...
+Iteration 1	beta diff =0.166	f(GC) diff =8.58e-11
+Iteration 2	beta diff =0.022	f(GC) diff =9.24e-14
+Iteration 3	beta diff =0.000479	f(GC) diff =1.87e-15
+Iteration 4	beta diff =3.86e-05	f(GC) diff =6.39e-16
+Stop at Iteration 4.
+AIC2 = 10194060947.449
+BIC2 = 10191073435.174
+RSS2 = 213.621
+
+	AIC2 = 12080981920.651
+	BIC2 = 12076545597.504
+	RSS2 = 208.956
+
+Computing normalization with k = 3 latent factors ...
+Iteration 1	beta diff =0.17	f(GC) diff =7.61e-11
+Iteration 2	beta diff =0.022	f(GC) diff =8.62e-14
+Iteration 3	beta diff =0.000566	f(GC) diff =2.14e-15
+Iteration 4	beta diff =5.35e-05	f(GC) diff =5.83e-16
+Stop at Iteration 4.
+AIC3 = 10588877486.761
+BIC3 = 10584102021.682
+RSS3 = 166.932
+
+	AIC3 = 12085083031.599
+	BIC3 = 12078428546.879
+	RSS3 = 159.275
+
+Computing normalization with k = 4 latent factors ...
+Iteration 1	beta diff =0.172	f(GC) diff =7.11e-11
+Iteration 2	beta diff =0.0205	f(GC) diff =8.39e-14
+Iteration 3	beta diff =0.000608	f(GC) diff =3.62e-15
+Iteration 4	beta diff =7.25e-05	f(GC) diff =7.51e-16
+Stop at Iteration 4.
+AIC4 = 10823396892.556
+BIC4 = 10816765320.864
+RSS4 = 152.945
+
+	AIC4 = 12086265451.4
+	BIC4 = 12077392805.106
+	RSS4 = 144.163
+
+Running CODEX in regions without common CNVs ...
+
+Computing normalization with k = 1 latent factors ...
+Iteration 1	beta diff =0.162	f(GC) diff =1.05e-10
+Iteration 2	beta diff =0.0234	f(GC) diff =1.26e-13
+Iteration 3	beta diff =0.000515	f(GC) diff =1.43e-15
+Iteration 4	beta diff =3.52e-05	f(GC) diff =8.49e-16
+Stop at Iteration 4.
+AIC1 = 9515161527.444
+BIC1 = 9513827150.194
+RSS1 = 264.995
+
+	AIC1 = 11909532458.4
+	BIC1 = 11907405440.633
+	RSS1 = 254.17
+
+
+Running CODEX2 in regions with common CNVs ...
+
+Error in EM.seed[, 3] : n?mero incorreto de dimensiones
+Calls: normalize_codex2_nr
+Ejecuci?n interrumpida
