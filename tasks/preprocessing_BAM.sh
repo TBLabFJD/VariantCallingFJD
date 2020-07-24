@@ -32,11 +32,11 @@ if [ "$local" != "True" ]; then
 
 	module load samtools/1.9
 	module load picard/2.18.9
-	module load gatk/4.1.2.0
+	module load gatk/4.1.5.0
 	module load bedtools/2.27.0
 	module load R
 	alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
-	alias gatk='java -jar /usr/local/bioinfo/gatk/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	
+	alias gatk='java -jar /usr/local/bioinfo/gatk/4.1.5.0/gatk-package-4.1.5.0-local.jar'	
 
 
 	softwareFile="${MDAP}/software_${run}.txt"
@@ -155,7 +155,7 @@ if [ "$duplicates" != "True" ]; then
 	printf '\nStart picard MarkDuplicates '${sample}''
 	
 	# lacking TMP folder 
-	gatk MarkDuplicates \
+	gatk MarkDuplicates --TMP_DIR=$TMP\
 	-I $alignment \
 	-O $dedupped \
 	-M $METRICS/marked_dup_metrics_${sample}.txt \
@@ -194,7 +194,7 @@ printf "\n\n\n- SORTING BAM (PICARD) "
 printf "\n------------------------\n"
 
 
-#Sorting dedupped data.
+# Sort BAM file by coordinate order and fix tag values for NM and UQ
 
 printf '\nRun picard SortSam and SetNmMdAndUqTags for '${sample}'\n'
 start=`date +%s`
@@ -204,14 +204,14 @@ deduppedsorted=${dedupped%.bam}_sorted.bam
 
 
 
-gatk SortSam \
+gatk SortSam --TMP_DIR=$TMP\
   --INPUT ${dedupped} \
   --OUTPUT /dev/stdout \
   --SORT_ORDER "coordinate" \
   --CREATE_INDEX false \
   --CREATE_MD5_FILE false \
 | \
-gatk  SetNmMdAndUqTags \
+gatk  SetNmMdAndUqTags --TMP_DIR=$TMP \
   --INPUT /dev/stdin \
   --OUTPUT ${deduppedsorted} \
   --CREATE_INDEX true \
@@ -330,7 +330,7 @@ if [ "$?" = "0" ]; then
 	printf  '\nGATK ApplyBQSR '${sample}' DONE'
 	#rm ${dedupped%.bam}_sorted.bam
 	#rm ${dedupped%.bam}_sorted.bai
-	rm $METRICS/before_recalibrated_bqsr_data_${sample}.recal.table
+	#printf 'rm '$METRICS'/before_recalibrated_bqsr_data_'${sample}'.recal.table'
 
 else
 	printf "\nERROR: PROBLEMS WITH BQSR"
@@ -344,3 +344,9 @@ printf '\nExecuting time: '$runtime
 
 
 
+
+
+# Removing temporal forder
+
+
+rm -r $TMP

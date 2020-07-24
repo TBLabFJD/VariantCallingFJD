@@ -26,9 +26,9 @@ threads=$8
 if [ "$local" != "True" ]; then
 
 	module load bwa/0.7.17
-	module load gatk/4.1.2.0
+	module load gatk/4.1.5.0 #module load gatk/4.1.2.0
 	module load samtools/1.9
-	alias gatk='java -jar /usr/local/bioinfo/gatk/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	
+	alias gatk='java -jar /usr/local/bioinfo/gatk/4.1.5.0/gatk-package-4.1.5.0-local.jar'	
 	alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
 
 

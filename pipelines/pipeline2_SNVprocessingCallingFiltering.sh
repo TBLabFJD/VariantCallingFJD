@@ -28,7 +28,7 @@ removebam=${18}
 genefilter=${19}
 user=${20}
 softwarePath=${21}
-
+interval_n=${22}
 tasksPath=${softwarePath}/tasks
 
 
@@ -38,7 +38,6 @@ if [ "$skipmapping" != "True" ]; then
 	printf "\n.......................\n"
 	printf "  PRE-PROCESSING $sample \n"
 	printf ".........................\n"
-
 
 	$tasksPath/preprocessing_BAM.sh $local $run $MDAP $sample $duplicates $REF
 
@@ -53,10 +52,30 @@ fi
 
 
 
+# printf "\n..........................\n"
+# printf "  CALCULATE COVERAGE $sample \n"
+# printf "............................\n"
+
+
+# mosdepth --by $panel ${QC}/${sample} ${bamfile}
+
+# cov=$(awk '{if($1=="total" && $3=="0.51"){print $2}}' ${QC}/${sample}.mosdepth.region.dist.txt)
+# echo $sample'\t0.51\t'$cov'\t'$run'\t'$bamfile'\n' >> ${QC}/minCovFilterResults.txt
+
+# if [ "$?" = "0" ]; then
+# 	printf '\nEXIT STATUS: 0'
+# 	printf '\nMOSDEPTH for '${sample}' DONE\n' 
+# else
+# 	printf "\nERROR: PROBLEMS WITH MOSDEPTH"
+# 	exit 1
+# fi
+
+
+
+
 
 if [ "$analysis" = "mapping" ]; then
 
-	rm -r $TMP
 	exit 0
 
 fi
@@ -69,14 +88,13 @@ printf "  SNV CALLING $sample \n"
 printf ".........................\n"
 
 
-$tasksPath/SNVcalling.sh $local $run $MDAP $sample $REF $bamfile $intervals $panel $cvcf $removebam
+$tasksPath/SNVcalling.sh $local $run $MDAP $sample $REF $bamfile $intervals $panel $cvcf $removebam $interval_n
 
 
 
 
 if [ "$cvcf" = "True" ]; then
 
- 	rm -r $TMP
 	exit 0
 
 fi
@@ -263,6 +281,23 @@ if [ "$genefilter" != "False" ]; then
 	printf '\nExecuting time: '$runtime 
 
 fi
+
+
+
+
+
+
+
+
+
+printf "\n\n..........................\n"
+printf "\n\n\n- MAF FILE PROCESSING "
+printf "\n------------------------------\n"
+
+
+$tasksPath/MAF_fjd.sh $local $run $MDAP $sample $REF $intervals $panel $cvcf $removebam
+
+
 
 
 

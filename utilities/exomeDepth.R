@@ -67,11 +67,13 @@ if(opt$bed=="genome"){
   myexons[,1] = paste("chr",myexons[,1] ,sep = "") 
 }else{
   myexons = read.delim(file=opt$bed, header = F, stringsAsFactors = F)
-  if(length(colnames(myexons))!=4){
+  if(length(colnames(myexons))<4){
     cat("ERROR: bed file without NAME field")
     quit(status = 1)}
+  if (length(colnames(myexons))>4){
+    myexons = myexons[,1:4]}
   colnames(myexons) = colnamesbed
-  myexons = myexons[!myexons$chromosome %in% c("chrX","chrY", "X","Y"),]
+  #myexons = myexons[!myexons$chromosome %in% c("chrX","chrY", "X","Y"),]
 }
 
 

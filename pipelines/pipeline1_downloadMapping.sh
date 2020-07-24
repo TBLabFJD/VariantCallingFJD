@@ -1,8 +1,8 @@
 #!/bin/sh
 
-#####################################################
+########################################################
 ### Pipeline 1: Basemount, Mapping and unmapped BAM ###
-#####################################################
+########################################################
 
 
 ### PIPELINE ARGUMENTS 
@@ -28,7 +28,6 @@ removebam=${18}
 genefilter=${19}
 user=${20}
 softwarePath=${21}
-
 tasksPath=${softwarePath}/tasks
 
 
@@ -44,7 +43,7 @@ printf ".........................\n"
 
 if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
 
-	python $utilitiesPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample $user
+	python $tasksPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample $user
 
 	if [ "$?" != "0" ]; then
 		printf "\nERROR: PROBLEMS WITH BASESPACE DATA DOWNLOADING/CONCATENATION"
@@ -70,11 +69,6 @@ reverse="${INPUT}/${sample}*_R2*.f*q.gz"
 
 
 
-
-
-
-
-
 printf "\n.....................\n"
 printf "  MAPPING $sample \n"
 printf ".....................\n"
@@ -85,7 +79,7 @@ $tasksPath/mapping_BAM.sh $local $run $MDAP $sample $forward $reverse $REF $thre
 
 
 if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
-	rm $foward
+	rm $forward
 	rm $reverse
 fi
 

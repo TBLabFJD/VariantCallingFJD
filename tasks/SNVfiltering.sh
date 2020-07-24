@@ -29,18 +29,11 @@ cvcf=$7
 
 if [ "$local" != "True" ]; then
 
-	module load miniconda/2.7
-	module load samtools/1.9
-	module load picard/2.18.9
-	module load gatk/4.1.2.0
-	module load bedtools/2.27.0
-	module load R
-	module load bcftools/1.3
-	module load gcc/7.3.0
-	source /usr/local/miniconda/python-2.7/etc/profile.d/conda.sh
-	conda activate gatk
+	module load gatk/4.1.5.0
+	eval "$(/usr/local/miniconda/python-3.6/bin/conda shell.bash hook)"
+	source activate gatk
 
-	alias gatk='java -jar /usr/local/bioinfo/gatk/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	
+	alias gatk='java -jar /usr/local/bioinfo/gatk/4.1.5.0/gatk-package-4.1.5.0-local.jar'	
 	CNN_REF=/home/proyectos/bioinfo/references/CNNgatk
 
 
@@ -101,6 +94,9 @@ GEN=$MDAP/genotyping
 SNV="${MDAP}/snv_results"
 mkdir $SNV
 
+# snv results folder
+BAM="${MDAP}/bams"
+mkdir $SNV
 
 # Temporal Folder
 TMP=$MDAP/${sample}_tmp
@@ -135,7 +131,7 @@ if [ "$ftype" != "HF" ]; then
 
 	gatk CNNScoreVariants \
 	--disable-avx-check \
-	-I $GEN/${name}_bamout.bam \
+	-I $BAM/${name}.bam \
 	-V $GEN/${name}.vcf  \
 	-O $SNV/${name}_cnnScored.vcf  \
 	-R $fasta \

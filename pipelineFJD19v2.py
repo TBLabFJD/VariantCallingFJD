@@ -82,6 +82,8 @@ def main():
 	parser.add_argument('-B', '--remove_bam', help="Remove bam files", required=False, action='store_true')
 	parser.add_argument('-d', '--duplicates', help="Data is not dedupped. By default, duplicates are just marked", required=False, action='store_true')
 	parser.add_argument('-u', '--basemountuser', help="Specify alternative basemount user", required=False, default=False)
+	parser.add_argument('--WGS', help="Whole Genome Sequencing Variant Calling", required=False, default=False)
+
 
 	
 
@@ -146,6 +148,7 @@ def main():
 		if not os.path.isfile(args.panel): 
 			sys.stderr.write("ERROR: Panel file '%s' does not exist\n" %(args.panel))
 			sys.exit()
+			
 		else:
 			args.panel=os.path.realpath(args.panel)
 
@@ -153,11 +156,11 @@ def main():
 		args.panel="genome"
 		if args.intervals == True:
 			sys.stderr.write("ERROR: Intervals specified but bed file not found.\n")
+			sys.exit()
+
 		if args.analysis in ["cnv","all"]:
 			sys.stderr.write("ERROR: Bed file of target regions is mandatory for CNV analysis.\n")
-
-	
-
+			sys.exit()
 
 
 
@@ -460,7 +463,7 @@ def main():
 					job_name=sampleAnalysis+"_"+sample_name
 
 					myargs_pipe1 = [pipelinesPath+"pipeline1_downloadMapping.sh"]+myargs
-					jobname_pipe1 =  "mapping_"+sampleAnalysis+"_"+sample_name
+					jobname_pipe1 =  "mapping"+"_"+sample_name
 
 					myargs_pipe2 = [pipelinesPath+"pipeline2_SNVprocessingCallingFiltering.sh"]+myargs
 					jobname_pipe2 =  "processing_"+sampleAnalysis+"_"+sample_name
@@ -480,7 +483,7 @@ def main():
 						tmpjobid=sbatch(jobname_pipe1, args.output, ' '.join(myargs_pipe1), time=args.time, mem=4, threads=args.threads, mail=args.mail, dep='') # mmapping alone: just to take advantage of threads
 						sys.stdout.write("JOB ID MAPPING: %s\n" %(tmpjobid))
 
-						jobid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, mem=args.memory, threads=1, mail=args.mail, dep=tmpjobid) # bam processing + snp calling + snp filtering
+						jobid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=tmpjobid) # bam processing + snp calling + snp filtering
 						jobid_list.append(jobid)
 						sys.stdout.write("JOB ID PROCESSING: %s\n" %(jobid))
 
@@ -489,7 +492,7 @@ def main():
 						tmpjobid=sbatch(jobname_pipe1, args.output, ' '.join(myargs_pipe1), time=args.time, mem=4, threads=args.threads, mail=args.mail, dep='') # mapping alone: just to take advantage of threads
 						sys.stdout.write("JOB ID MAPPING: %s\n" %(tmpjobid))
 
-						jobid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, mem=args.memory, threads=1, mail=args.mail, dep=tmpjobid) # bam processing + snp calling + snp filtering
+						jobid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=tmpjobid) # bam processing + snp calling + snp filtering
 						jobid_list_snp.append(jobid)
 						sys.stdout.write("JOB ID PROCESSING AND SNP CALLING: %s\n" %(jobid))
 
@@ -497,7 +500,7 @@ def main():
 
 					elif sampleAnalysis=="snp": # SBATCH AND SAVE JOB IDS FOR SNP
 
-						jobid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, mem=args.memory, threads=1, mail=args.mail, dep='') # bam processing + snp calling + snp filtering
+						jobid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep='') # bam processing + snp calling + snp filtering
 						jobid_list_snp.append(jobid)
 						sys.stdout.write("JOB ID SNP CALLING: %s\n" %(jobid))
 

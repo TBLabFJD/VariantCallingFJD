@@ -80,6 +80,7 @@ bedFile_data <- bedFile_data[order(bedFile_data$CHR, bedFile_data$START),]
 # Create total_data. It contains the output of the programs
 total_data <- data.frame(stringsAsFactors = FALSE)
 
+
 #************************#
 # Import ExomeDepth data #
 #************************#

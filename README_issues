@@ -1,17 +1,51 @@
 
-# mapping job name: mapping_mapping_12-2502.out --> CHANGE
 # check if the number of GB input by user is just for VEP o for every step!!!
+# add sex inference (take from gnomad 3.0)
+# compute all samples together for Projects
+# Haplotype single only for single samples as 1 genome: Joint genotyping as standard.
+# Change reference to avoid haplotypes
 
 
+IMPORTANT:
+
+https://app.terra.bio/#workspaces/help-gatk/Germline-SNPs-Indels-GATK4-b37/data # ALL REFERENCE DATA USED IN GATK 
+https://console.cloud.google.com/storage/browser/gatk-legacy-bundles/b37
 
 
 NOVEDADES VERSIÓN:
 
 - New bamout option
 - Remove GVCF generation
-- CNN implementation
-- New GATK version
-- Includes MAF
+- CNN implementation - lack
+- New GATK version- lack
+- Include MAF!
+- CHECK FOR BOTH FILTERINGS PASS
 - New VEP filterings and new raw VCF definition - DONE
 - New QC with mosdepth at the beggining and save results
 - TRIO analysis with CNN or HF ?¿
+- Remove -ERC GVCF mode in single sample. 
+- padding to 1000 bp
+- Calculate coverage with mosdepth and fastqc report
+
+
+
+
+## WGS CALLING
+
+# BQSR is done on the sorted BAM in parallel: 
+# https://github.com/gatk-workflows/gatk4-data-processing/blob/1.1.0/processing-for-variant-discovery-gatk4.wdl
+
+## 
+
+The calls made by GenotypeGVCFs and HaplotypeCaller run in multisample mode should mostly be equivalent, especially as cohort sizes increase. However, there can be some marginal differences in borderline calls, i.e. low-quality variant sites, in particular for small cohorts with low coverage. For such cases, joint genotyping directly with HaplotypeCaller and/or using the new quality score model with GenotypeGVCFs (turned on with -new-qual) may be preferable.
+
+gatk HaplotypeCaller \
+    -R ref/ref.fasta \
+    -I bams/mother.bam \
+    -I bams/father.bam \
+    -I bams/son.bam \
+    -O sandbox/trio_hcjoint_nq.vcf \
+    -L 20:10,000,000-10,200,000 \
+    -new-qual \
+    -bamout sandbox/trio_hcjoint_nq.bam
+In the interest of time, we do not run the above command. Note the BAMOUT will contain reassembled reads for all the input samples.

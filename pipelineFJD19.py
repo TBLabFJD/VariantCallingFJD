@@ -258,7 +258,6 @@ def main():
 
 	# when local samples, checking if folder exists and in case of fastq input check if need of concatenation.
 
-
 	if not args.basespace:
 
 		if not os.path.isdir(args.input): 
@@ -276,8 +275,13 @@ def main():
 			dnaidsR2=defaultdict(int)
 
 			dnaids = set(sorted([(os.path.basename(i)).split("_")[0].replace(".fastq.gz", "").replace(".fq.gz", "")  for i in files]))
+			print(args.samples)
 			for w in [(os.path.basename(i)).split("_")[0].replace(".fastq.gz", "").replace(".fq.gz", "") for i in files if '_R1' in i]: dnaidsR1[w] +=1
 			for w in [(os.path.basename(i)).split("_")[0].replace(".fastq.gz", "").replace(".fq.gz", "") for i in files if '_R2' in i]: dnaidsR2[w] +=1
+
+
+			print(dnaidsR2.keys())
+			print(dnaidsR1.keys())
 
 			if len(dnaids)==0:
 				sys.stderr.write("ERROR: Fastq files not found in '%s'\n" %(args.input))
@@ -294,7 +298,7 @@ def main():
 						elif dnaidsR1[dnaid]>1 or dnaidsR2[dnaid]>1:
 							cat=True
 					else:
-						sys.stderr.write("ERROR: check fastq input directory '%s'. No files for R1 or R2.\n" %(args.input))
+						sys.stderr.write("ERROR: check fastq input directory '%s'. Missing R1 or R2.\n" %(args.input))
 						sys.exit()
 		else:
 			# if bam files provided, the name would be the string before "_"

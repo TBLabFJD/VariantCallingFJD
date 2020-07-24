@@ -8,23 +8,6 @@
 # Genotype Caller
 
 
-###############
-## ARGUMENTS ##
-###############
-
-local=$1
-run=$2
-MDAP=$3
-sample=$4
-REF=$5
-bamfile=$6
-intervals=$7
-panel=$8
-cvcf=$9
-removebam=$10
-
-
-
 
 
 #####################
@@ -36,11 +19,11 @@ if [ "$local" != "True" ]; then
 
 	module load samtools/1.9
 	module load picard/2.18.9
-	module load gatk/4.1.2.0
+	module load gatk/4.1.5.0
 	module load bedtools/2.27.0
 	module load R
 	alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
-	alias gatk='java -jar /usr/local/bioinfo/gatk/gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar'	
+	alias gatk='java -jar /usr/local/bioinfo/gatk/4.1.5.0/gatk-package-4.1.5.0-local.jar'	
 
 
 	softwareFile="${MDAP}/software_${run}.txt"
@@ -91,22 +74,36 @@ fi
 
 
 
-###############
-## VARIABLES ##
-###############
+###########
+## INPUT ##
+###########
+
+# options 
+
+local=$1
+run=$2
+MDAP=$3
+sample=$4
+intervals=$7
+cvcf=$9
+removebam=$10
 
 
+# files
 
-# Ref Fasta
-fasta=$REF
+fasta=$5 # Ref Fasta
+bamfile=$6
+panel=$8
 
 
 # genotyping folder
+
 GEN=$MDAP/genotyping 
 mkdir $GEN
 
 
 # Temporal Folder
+
 TMP=$MDAP/${sample}_tmp
 mkdir $TMP
 
@@ -114,9 +111,9 @@ mkdir $TMP
 
 
 
-##############
-## COMMANDS ##
-##############
+#############
+## COMMAND ##
+#############
 
 
 
@@ -216,51 +213,6 @@ printf '\nExecuting time: '$runtime
 
 
 
-
-printf "\n\n\n- MOSDEPTH FOR BAMOUT"
-printf "\n-----------------------\n"
-
-
-module load miniconda/3.6
-module load bedtools
-
-
-mosdepth --quantize 10: -n -x  $MAF/coverage/${sample}_cov ${GEN}/${sample}_bamout.bam
-
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\nMOSDEPTH for '${sample}' DONE\n' 
-	rm ${MAF}/coverage/${sample}_cov.mosdepth.global.dist.txt
-else
-	printf "\nERROR: PROBLEMS WITH MOSDEPTH"
-	exit 1
-fi
-
-
-# make padding file and intersect depth if intervals are given
-
-
-if [ "$intervals" != "False" ]; then
-
-	basenamePanel="$(basename -- $panel)"
-	awk '{print $1"\t"$2-1000"\t"$3+1000}' $panel > ${MDAP}/${basenamePanel}_padding1000_tmp.bed
-	bedtools merge -i ${MDAP}/${basenamePanel}_padding1000_tmp.bed > ${MDAP}/${basenamePanel}_padding1000_tmp_merged.bed
-	bedtools intersect -a ${MDAP}/${basenamePanel}_padding1000_tmp_merged.bed -b $MAF/coverage/${sample}_cov.quantized.bed.gz -wb | awk '{print $1"\t"$2"\t"$3"\t"$7}' >  $MAF/coverage/${sample}_cov.quantized.bed_Genotyped.bed
-
-
-	if [ "$?" = "0" ]; then
-		printf '\nEXIT STATUS: 0'
-		printf '\nBEDTOOLS INTERSECT for '${sample}' DONE\n' 
-		rm ${panel}_padding1000_tmp.bed
-		rm ${panel}_padding1000_tmp_merged.bed
-	else
-		printf "\nERROR: PROBLEMS WITH BEDTOOLS INTERSECT"
-		exit 1
-	fi
-
-
-module unload miniconda/3.6
-module unload bedtools
 
 
 
