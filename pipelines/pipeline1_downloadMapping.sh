@@ -12,22 +12,13 @@ MDAP=$2
 sample=$3
 threads=$4
 run=$5
-panel=$6
-basespace=$7
-cat=$8
-fastqFolder=$9
-analysis=${10}
-cvcf=${11}
-skipmapping=${12}    
-REF=${13}
-local=${14}
-pathology=${15}
-intervals=${16}
-duplicates=${17}
-removebam=${18}
-genefilter=${19}
-user=${20}
-softwarePath=${21}
+basespace=$6
+cat=$7
+fastqFolder=$8
+REF=${9}
+local=${10}
+user=${11}
+softwarePath=${12}
 tasksPath=${softwarePath}/tasks
 
 
@@ -35,7 +26,7 @@ tasksPath=${softwarePath}/tasks
 
 
 printf "\n.........................\n"
-printf "  DEFINING INPUT $sample \n"
+printf "DEFINING INPUT $sample \n"
 printf ".........................\n"
 
 
@@ -43,26 +34,25 @@ printf ".........................\n"
 
 if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
 
-	python $tasksPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample $user
+	python $tasksPath/fastqDownloadCat.py $basespace $fastqFolder $INPUT $sample $user
 
 	if [ "$?" != "0" ]; then
 		printf "\nERROR: PROBLEMS WITH BASESPACE DATA DOWNLOADING/CONCATENATION"
 		exit 1
 	else
 		printf '\nEXIT STATUS: 0'
-		printf '\nDOWNLOAD/CAT FOR '${sample}'  DONE'
+		printf '\nDOWNLOAD/CAT FOR '${sample}'  DONE\n'
 	fi
 
 	INPUT=$fastqFolder
 
-	if [[ "$basespace" = "True" ]]; then
-		sample=${sample:0:7}
-	fi
+	# if [[ "$basespace" = "True" ]]; then
+	# 	sample=${sample:0:7}
+	# fi
 fi
 
 forward="${INPUT}/${sample}*_R1*.f*q.gz"
 reverse="${INPUT}/${sample}*_R2*.f*q.gz"
-
 
 
 
@@ -75,7 +65,8 @@ printf ".....................\n"
 
 
 
-$tasksPath/mapping_BAM.sh $local $run $MDAP $sample $forward $reverse $REF $threads
+$tasksPath/mapping.sh $run $MDAP $sample $forward $reverse $REF $threads
+s1="$?"
 
 
 if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
@@ -83,4 +74,6 @@ if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
 	rm $reverse
 fi
 
+
+if [ "$s1" != "0" ]  ; then exit 1; fi
 

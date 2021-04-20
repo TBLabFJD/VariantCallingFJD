@@ -32,7 +32,7 @@ printf ".....................\n"
 
 
 
-$tasksPath/mapping_BAM.sh $local $run $MDAP $sample $forward $reverse $REF $threads
+$tasksPath/mapping.sh $local $run $MDAP $sample $forward $reverse $REF $threads
 
 
 

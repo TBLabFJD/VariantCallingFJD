@@ -12,6 +12,8 @@ https://app.terra.bio/#workspaces/help-gatk/Germline-SNPs-Indels-GATK4-b37/data 
 https://console.cloud.google.com/storage/browser/gatk-legacy-bundles/b37
 
 
+# ADD RG PER LINE: https://gatk.broadinstitute.org/hc/en-us/articles/360035889471-How-should-I-pre-process-data-from-multiplexed-sequencing-and-multi-library-designs-
+
 NOVEDADES VERSIÓN:
 
 - New bamout option

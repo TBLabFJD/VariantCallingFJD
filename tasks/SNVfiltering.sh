@@ -14,10 +14,12 @@
 local=$1
 run=$2
 MDAP=$3
-name=$4 # sample name
+name=$4 # sample name or run name
 REF=$5
 ftype=$6 # when multi VCF is used only "HF" can be used
 cvcf=$7
+skipmapping=$8    
+INPUT=$9
 
 
 
@@ -27,52 +29,26 @@ cvcf=$7
 #####################
 
 
-if [ "$local" != "True" ]; then
 
-	module load gatk/4.1.5.0
-	eval "$(/usr/local/miniconda/python-3.6/bin/conda shell.bash hook)"
-	source activate gatk
+module load gatk/4.2.0
+eval "$(/usr/local/miniconda/python-3.6/bin/conda shell.bash hook)"
+source activate gatk
 
-	alias gatk='java -jar /usr/local/bioinfo/gatk/4.1.5.0/gatk-package-4.1.5.0-local.jar'	
-	CNN_REF=/home/proyectos/bioinfo/references/CNNgatk
-
-
-	softwareFile="${MDAP}/software_${run}.txt"
-	title="SNV FILTERING"
-	if [ ! -f $softwareFile ] || [ `grep -q $title $softwareFile` ] ; then 
-
-		printf "SNV FILTERING:\n" >> ${softwareFile}
-		module list 2>> ${softwareFile}
-	
-	fi
+alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
+CNN_REF=/home/proyectos/bioinfo/references/CNNgatk
 
 
+softwareFile="${MDAP}/software_${run}.txt"
+title="SNV FILTERING"
+if [ ! -f $softwareFile ] || ! grep -q $title $softwareFile  ; then
 
-
-else
-
-	export SFT=/mnt/genetica3/marius/pipeline_practicas_marius/software
-	alias gatk='java  -Xmx10g -jar $SFT/gatk/build/libs/gatk-package-4.0.6.0-22-g9d9484f-SNAPSHOT-local.jar'
-	CNN_REF=/home/proyectos/bioinfo/references/CNNgatk
-
-	softwareFile="${MDAP}/software_${run}.txt"
-	echo $softwareFile
-	title="SNV FILTERING"
-	
-	if [ ! -f $softwareFile ] || [ `grep -q $title $softwareFile` ] ; then 
-
-		printf "SNV FILTERING:\n" >> ${softwareFile}
-		
-		printf "\nGATK VERSION\n" >> ${softwareFile}
-		gatk ApplyBQSR 2>&1 | head -n4 | tail -n1 >> ${softwareFile}
-
-
-	fi
-
-
-
+	printf "SNV FILTERING:\n" >> ${softwareFile}
+	module list 2>> ${softwareFile}
 
 fi
+
+
+
 
 
 
@@ -91,15 +67,11 @@ fasta=$REF
 GEN=$MDAP/genotyping 
 
 # snv results folder
-SNV="${MDAP}/snv_results"
-mkdir $SNV
-
-# snv results folder
-BAM="${MDAP}/bams"
+SNV="${MDAP}/snvs"
 mkdir $SNV
 
 # Temporal Folder
-TMP=$MDAP/${sample}_tmp
+TMP=$MDAP/${name}_tmp
 mkdir $TMP
 
 
@@ -124,30 +96,35 @@ if [ "$ftype" != "HF" ]; then
 	printf "\n---------------------------------------\n"
 
 
+	# 0. Set bam folder 
+
+	if [ "$skipmapping" != "True" ]; then bamfolder=$MDAP/bams; else bamfolder=${INPUT}; fi
+
 
 	# 1. Annotate a VCF with scores
-	# 2. Filtering variants according to CNN score.
-
 
 	gatk CNNScoreVariants \
 	--disable-avx-check \
-	-I $BAM/${name}.bam \
+	-I ${bamfolder}/${name}.bam \
 	-V $GEN/${name}.vcf  \
-	-O $SNV/${name}_cnnScored.vcf  \
+	-O $SNV/${name}.cnnScored.vcf  \
 	-R $fasta \
 	--tensor-type read_tensor
 
-	echo $GEN/${name}_cnnScored.vcf
-	echo ${CNN_REF}/b37_hapmap_3.3.b37.chr.vcf.gz
+	#echo $SNV/${name}.cnnScored.vcf
+	#echo ${CNN_REF}/b37_hapmap_3.3.b37.chr.vcf.gz
+
+
+	# 2. Filtering variants according to CNN score.
 
 	gatk FilterVariantTranches \
-	-V  $GEN/${name}_cnnScored.vcf \
-	--resource ${CNN_REF}/b37_hapmap_3.3.b37.chr.vcf.gz \
-	--resource ${CNN_REF}/b37_1000G_omni2.5.b37.chr.vcf.gz \
+	-V  $SNV/${name}_cnnScored.vcf \
+	--resource ${CNN_REF}/b37_hapmap_3.3.b37.mainchr.vcf.gz \
+	--resource ${CNN_REF}/b37_1000G_omni2.5.b37.mainchr.vcf.gz \
 	--info-key CNN_2D \
 	--snp-tranche 99.95 \
 	--indel-tranche 99.4 \
-	-O $SNV/${name}_gatkLabeled.vcf \
+	-O $SNV/${name}.gatkLabeled.vcf \
 	--invalidate-previous-filters
 
 
@@ -189,22 +166,26 @@ else
 	#printf "\nExtract the SNP's from the call set."
 	start=`date +%s`
 
-	gatk SelectVariants --tmp-dir=$TMP \
+	gatk SelectVariants --tmp-dir $TMP \
 	-R $fasta \
 	-V $GEN/${name}.vcf \
 	--select-type-to-include SNP \
-	-O $SNV/${name}_selected_raw_snp.vcf
+	-O $SNV/${name}.snp.vcf
 	s1="$?"
 
 
 	#2.Apply the filters to the SNP's callset.
 
-	gatk VariantFiltration --tmp-dir=$TMP \
-	-R $fasta \
-	-V $SNV/${name}_selected_raw_snp.vcf \
-	--filter-expression "QD < 2.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
-	--filter-name "my_SNP_filter" \
-	-O $SNV/${name}_filtered_snp.vcf
+	gatk VariantFiltration --tmp-dir $TMP \
+	-V $SNV/${name}.snp.vcf \
+    -filter "QD < 2.0" --filter-name "QD2" \
+    -filter "QUAL < 30.0" --filter-name "QUAL30" \
+    -filter "SOR > 3.0" --filter-name "SOR3" \
+    -filter "FS > 60.0" --filter-name "FS60" \
+    -filter "MQ < 40.0" --filter-name "MQ40" \
+    -filter "MQRankSum < -12.5" --filter-name "MQRankSum-12.5" \
+    -filter "ReadPosRankSum < -8.0" --filter-name "ReadPosRankSum-8" \
+	-O $SNV/${name}.filtered.snp.vcf
 	s2="$?"
 
 
@@ -213,32 +194,33 @@ else
 	### INDELs
 
 	#3. Extract the INDELS from the ORIGINAL call set.
-	gatk SelectVariants --tmp-dir=$TMP \
+	gatk SelectVariants --tmp-dir $TMP \
 	-R $fasta \
 	-V $GEN/${name}.vcf \
 	--select-type-to-include INDEL \
-	-O $SNV/${name}_selected_raw_indel.vcf
+	-O $SNV/${name}.indel.vcf
 	s3="$?"
 
 
 
 	#4.Apply the filters to the INDEL's callset.
-	gatk VariantFiltration --tmp-dir=$TMP \
-	-R $fasta \
-	-V $SNV/${name}_selected_raw_indel.vcf \
-	--filter-expression "QD < 2.0  || ReadPosRankSum < -20.0" \
-	--filter-name "my_INDEL_filter" \
-	-O $SNV/${name}_filtered_indel.vcf
+	gatk VariantFiltration --tmp-dir $TMP \
+	-V $SNV/${name}.indel.vcf \
+    -filter "QD < 2.0" --filter-name "QD2" \
+    -filter "QUAL < 30.0" --filter-name "QUAL30" \
+    -filter "FS > 200.0" --filter-name "FS200" \
+    -filter "ReadPosRankSum < -20.0" --filter-name "ReadPosRankSum-20" \
+	-O $SNV/${name}.filtered.indel.vcf
 	s4="$?"
 
 
 	# Combine Variants after using SNPS and INDELS filtering into a single file and get it ready for annotation.
 
-	gatk MergeVcfs --TMP_DIR=$TMP \
-	-R $HG19/ucsc.hg19.fasta \
-	-I $SNV/${name}_filtered_snp.vcf \
-	-I $SNV/${name}_filtered_indel.vcf \
-	-O $SNV/${name}_gatkLabeled.vcf
+	gatk MergeVcfs --TMP_DIR $TMP \
+	-R $REF \
+	-I $SNV/${name}.filtered.snp.vcf \
+	-I $SNV/${name}.filtered.indel.vcf \
+	-O $SNV/${name}.gatkLabeled.vcf
 	s5="$?"
 
 	#bcftools view -i 'FILTER="PASS"' $SNV/${name}_hLabeled.vcf  > $SNV/${name}_gatkFiltered.vcf
@@ -249,11 +231,11 @@ else
 		printf '\nEXIT STATUS: 0'
 		printf  '\nHARD FILTERING for '${name}' DONE'
 
-		rm $GEN/${name}.vcf*
-		rm $SNV/${name}_selected_raw_indel.vcf*
-		rm $SNV/${name}_selected_raw_snp.vcf*
-		rm $SNV/${name}_filtered_indel.vcf*
-		rm $SNV/${name}_filtered_snp.vcf*
+		# rm $GEN/${name}.vcf*
+		rm $SNV/${name}.indel.vcf*
+		rm $SNV/${name}.snp.vcf*
+		rm $SNV/${name}.filtered.indel.vcf*
+		rm $SNV/${name}.filtered.snp.vcf*
 	else
 		printf "\nERROR: PROBLEMS WITH HARD FILTERING"
 		exit 1
@@ -273,12 +255,22 @@ fi
 
 
 
+# Removing temporal forder
+
+rm -r $TMP
 
 
 
-if [ "$cvcf" = "True" ]; then 
+
+
+
+
+
+
+
+# if [ "$cvcf" = "True" ]; then 
 	
-	printf '\n' $SNV/${name}_raw.vcf >> $SNV/filteredVCFs_to_combine_$run.list
+# 	printf '\n' $SNV/${name}_raw.vcf >> $SNV/filteredVCFs_to_combine_$run.list
 
-fi
+# fi
 

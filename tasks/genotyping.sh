@@ -1,14 +1,28 @@
 #!/bin/sh
 
 #########################
-### TASK: SNV calling ###
+### TASK: Genotyping ###
 #########################
 
-# Genotyping. Uses
-# 1. Joint genotyping when scattering WGS across intervals
-# 2. Joint genotyping for trio analysis of WES/WGS.
+# Perform joint genotyping on:
+
+# 1. a singular sample by providing a single-sample GVCF
+# 2. a combined multi-sample GVCF
+# 3. on GenomicsDB workspace created with GenomicsDBImport
 
 
+###############
+## ARGUMENTS ##
+###############
+
+local=$1
+run=$2
+MDAP=$3
+sample=$4  # sample or run name if multi-sample vcf
+input=$5
+output=$6
+fasta=$7  # ref Fasta
+ped=$8
 
 
 #####################
@@ -16,61 +30,26 @@
 #####################
 
 
-if [ "$local" != "True" ]; then
 
-	module load samtools/1.9
-	module load picard/2.18.9
-	module load gatk/4.1.5.0
-	module load bedtools/2.27.0
-	module load R
-	alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
-	alias gatk='java -jar /usr/local/bioinfo/gatk/4.1.5.0/gatk-package-4.1.5.0-local.jar'	
-
-
-	softwareFile="${MDAP}/software_${run}.txt"
-	title="SNV CALLING"
-	if [ ! -f $softwareFile ] || [ `grep -q $title $softwareFile` ] ; then 
-
-		printf "SNV CALLING:\n" >> ${softwareFile}
-		module list 2>> ${softwareFile}
-	
-	fi
+module load samtools/1.9
+module load picard/2.18.9
+module load gatk/4.2.0
+module load bedtools/2.27.0
+module load R
+alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
+alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
 
 
-	MAF="/home/proyectos/bioinfo/fjd/MAF_FJD"
-
-
-else
-
-
-	export SFT=/mnt/genetica3/marius/pipeline_practicas_marius/software
-	alias samtools='$SFT/samtools/samtools'
-	alias picard='java -Xmx10g -jar $SFT/picard/build/libs/picard.jar'
-	alias gatk='java  -Xmx10g -jar $SFT/gatk/build/libs/gatk-package-4.0.6.0-22-g9d9484f-SNAPSHOT-local.jar'
-
-	softwareFile="${MDAP}/software_${run}.txt"
-	title="SNV CALLING"
-	
-	if [ ! -f $softwareFile ] || [ `grep -q $title $softwareFile` ] ; then 
-
-		printf "SNV CALLING:\n" >> ${softwareFile}
-		
-		printf "\nSamtools VERSION\n" >> ${softwareFile}
-		samtools --version 2>&1 | head -n2 >> ${softwareFile}
-		
-		printf "\nPicard VERSION\n" >> ${softwareFile}
-		picard MarkDuplicates --version  2>&1 | head -n2 >> ${softwareFile}
-		
-		printf "\nGATK VERSION\n" >> ${softwareFile}
-		gatk ApplyBQSR 2>&1 | head -n4 | tail -n1 >> ${softwareFile}
-
-
-	fi
-
-
-
+softwareFile="${MDAP}/software_${run}.txt"
+title="SNV CALLING"
+if [ ! -f $softwareFile ] || ! grep -q $title $softwareFile  ; then
+	printf "SNV CALLING:\n" >> ${softwareFile}
+	module list 2>> ${softwareFile}
 
 fi
+
+
+
 
 
 
@@ -78,29 +57,6 @@ fi
 ###########
 ## INPUT ##
 ###########
-
-# options 
-
-local=$1
-run=$2
-MDAP=$3
-sample=$4
-intervals=$7
-cvcf=$9
-removebam=$10
-
-
-# files
-
-fasta=$5 # Ref Fasta
-bamfile=$6
-panel=$8
-
-
-# genotyping folder
-
-GEN=$MDAP/genotyping 
-mkdir $GEN
 
 
 # Temporal Folder
@@ -124,14 +80,31 @@ printf "\n--------------------------\n"
 
 #GenotypeGVCFs into final VCF
 
-printf  '\nUsing GATK GenotypeGVCFs for final VCF'
+printf  '\nUsing GATK GenotypeGVCFs'
 start=`date +%s`
+echo $ped
 
-gatk GenotypeGVCFs --tmp-dir=$TMP \
-	-R $fasta \
-	-V $GEN/${sample}.g.vcf \
-	-G StandardAnnotation \
-	-O $GEN/${sample}.vcf 
+if [ "$ped" != "null" ]; then
+
+	gatk GenotypeGVCFs --tmp-dir $TMP \
+		-R $fasta \
+		-V $input \
+		-O $output \
+		-ped $ped
+
+else
+
+	gatk GenotypeGVCFs --tmp-dir $TMP \
+		-R $fasta \
+		-V $input \
+		-O $output
+
+fi
+
+
+
+
+
 
 if [ "$?" = "0" ]; then
 	printf '\nEXIT STATUS: 0'
@@ -149,4 +122,6 @@ printf '\nExecuting time: '$runtime
 
 
 
+# Removing temporal forder
 
+rm -r $TMP

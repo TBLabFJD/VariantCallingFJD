@@ -166,6 +166,7 @@ tagC=""
 # # 5. Call copy number segments and consolidate sample results with PostprocessGermlineCNVCalls
 
 n=$1
+ls -ltrh
 
 tagC=""
 for file in cohort/temp_00*-calls; do tagC="${tagC} --calls-shard-path ${file}"; done
