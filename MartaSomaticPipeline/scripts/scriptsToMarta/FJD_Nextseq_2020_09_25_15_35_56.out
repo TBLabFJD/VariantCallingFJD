@@ -1,0 +1,59 @@
+
+FJD ANALYSIS
+
+Checking arguments...
+
+..................................
+User-specified test samples:
+B20314403
+..................................
+
+..................................
+Samples that will be analysed: 
+B20314403
+..................................
+
+......................................................
+  RUNNING MAPPING OR/AND SNV CALLING FOR INDIVIDUAL SAMPLES
+......................................................
+
+Analysing individual sample 'B20314403' (mapping) with arguments:
+
+INPUT FOLDER: /lustre/scratch/lodela/DS-Linfomas-FJD-3_2020_06_29_11_31_26/B20314403
+OUTPUT DIR: /lustre/proyectos/bioinfo/lodela/BioinfoUnit/martaLymp/newResults_Nov19/nextseq_test
+SAMPLE LABEL: B20314403
+N THREADS: 5
+RUN LABEL: Nextseq_2020_09_25_15_35_56
+PANEL BED FILE: genome
+BASESPACE DOWNLOAD: False
+CONCATENATION: True
+INPUT DIRECTORY: /scratch/lodela/Nextseq_2020_09_25_15_35_56/
+ANALYSIS TYPE: mapping
+COMBINED VCF: False
+SKIPPING MAPPING STEP: False
+GENOME BUNDLE: /home/proyectos/bioinfo/references/hg19
+LOCAL: False
+PATHOLOGY: healthy
+INTERVALS: False
+REMOVE DUPLICATES: False
+REMOVE BAM FILES: False
+GENE LIST: False
+BASESPACE USER: martaLymp
+JOB NAME: mapping_B20314403
+JOB ID: 780984
+TOTAL SECONDS: 0.809239149094
+
+
+.................................
+  REMOVING TMP FOLDERS AND FILES 
+...................................
+
+JOB ID: 780985
+DEPENDENT JOBS: 780984
+
+...............................
+  SLURM JOB STATUS SUMMARY 
+.................................
+
+JOB ID: 780986
+DEPENDENT JOBS: 780984:780985
