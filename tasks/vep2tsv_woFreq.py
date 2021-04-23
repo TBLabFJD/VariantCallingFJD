@@ -10,6 +10,14 @@ import os
 
 def main():
 
+
+    # Field that we are filtering
+
+    myFields = ['VEP_UNIPROT_ISOFORM', 'BaseQRankSum', 'VEP_SYMBOL_SOURCE', 'VEP_MOTIF_SCORE_CHANGE', 'FILTER', 'AF', 'VEP_MOTIF_NAME', 'ExcessHet', 'MLEAF', 'VEP_MOTIF_POS', 'VEP_FLAGS', 'VEP_FJD_MAF', 'VEP_SOURCE', 'SOR', 'VEP_HIGH_INF_POS', 'VEP_IMPACT', 'VEP_REFSEQ_MATCH', 'AC', 'MQRankSum', 'MLEAC', 'NDA', 'AN', 'VEP_UNIPARC', 'VEP_ALLELE_NUM', 'VEP_HGNC_ID', 'VEP_CDS_position', 'VEP_REFSEQ_OFFSET', 'ID', 'VEP_Amino_acids', 'ReadPosRankSum', 'VEP_Allele', 'VEP_BAM_EDIT', 'VEP_HGVS_OFFSET', 'VEP_Protein_position', 'VEP_cDNA_position', 'VEP_TREMBL', 'VEP_TRANSCRIPTION_FACTORS', 'VEP_Codons', 'MQ', 'QD', 'VEP_GIVEN_REF', 'VEP_USED_REF', "VEP_GERP++_RS", "VEP_GERP++_RS_rankscore", "VEP_gnomAD_exomes_NFE_AF",  "VEP_rs_dbSNP150" ,              "VEP_kaviar", ]
+    args = parse_args()
+    start_time = time.time()
+
+
     # myFields = ["CHROM", "POS", "REF", "ALT", "VEP_SYMBOL",    "VEP_Gene", "QUAL", "DP", "FS", "VEP_VARIANT_CLASS", 
     #    "VEP_Existing_variation",  "VEP_Feature_type",    "VEP_Feature", "VEP_CANONICAL",
     #    "VEP_BIOTYPE", "VEP_Consequence", "VEP_EXON",   "VEP_INTRON", "VEP_HGVSc", "VEP_HGVSp", "VEP_DISTANCE",
@@ -23,28 +31,23 @@ def main():
     #     "VEP_phastCons20way_mammalian_rankscore",  "VEP_phyloP20way_mammalian",   "VEP_phyloP20way_mammalian_rankscore","gnomAD_exomes_CCR"] 
     
 
-
-    myFields = ["CHROM", "POS", "REF", "ALT", "VEP_SYMBOL",    "VEP_Gene", "QUAL", "DP", "FS", "VEP_VARIANT_CLASS",
-       "VEP_Existing_variation",  "VEP_Feature_type",    "VEP_Feature", "VEP_CANONICAL",
-       "VEP_BIOTYPE", "VEP_Consequence", "VEP_EXON",   "VEP_INTRON", "VEP_HGVSc", "VEP_HGVSp", "VEP_DISTANCE",
-       "VEP_STRAND", "VEP_ENSP", "VEP_SWISSPROT", "VEP_Interpro_domain", "VEP_DOMAINS", "VEP_SIFT",  
-       "VEP_PolyPhen", "VEP_CADD_PHRED", "VEP_CADD_RAW", "VEP_LRT_pred", "VEP_M-CAP_pred", "VEP_MetaLR_pred", "VEP_MetaSVM_pred", "VEP_MutationAssessor_pred",
-       "VEP_MutationTaster_pred", "VEP_PROVEAN_pred", "VEP_FATHMM_pred", "VEP_ada_score",  "VEP_rf_score"    ,"VEP_LoFtool" , "VEP_gnomAD_exomes_CCR",
-       "VEP_ExACpLI" ,"VEP_CLIN_SIG" ,"VEP_SOMATIC", "VEP_PHENO",   "VEP_PUBMED",
-        "VEP_AF",  "VEP_MAX_AF",  "VEP_MAX_AF_POPS", "VEP_1000Gp3_AF",  "VEP_1000Gp3_EUR_AF",  "VEP_ExAC_AF",
-        "VEP_ExAC_Adj_AF", "VEP_ExAC_EAS_AF", "VEP_ExAC_NFE_AF", "VEP_GTEx_V6p_gene",   "VEP_GTEx_V6p_tissue",
-        "VEP_gnomAD_exomes_AF", "VEP_gnomADg_exomes_NFE_AF", "VEP_gnomADg", "VEP_gnomADg_AF_NFE", "VEP_gnomADg_AF_Male",
-        "VEP_gnomADg_AF_Female", "VEP_gnomADg_Hom", "VEP_gnomADg_POPMAX", "VEP_gnomADg_AF_POPMAX" ,  
-        "VEP_kaviar_AF", "VEP_kaviar_AC", "VEP_kaviar_AN", "VEP_phastCons20way_mammalian",
-        "VEP_phastCons20way_mammalian_rankscore",  "VEP_phyloP20way_mammalian",   "VEP_phyloP20way_mammalian_rankscore",
-        "VEP_MaxEntScan_alt", "VEP_MaxEntScan_diff", "VEP_MaxEntScan_ref"]
-
+    # myFields = ["CHROM", "POS", "REF", "ALT", "VEP_SYMBOL",  "VEP_Gene", "QUAL", "DP", "FS", "VEP_VARIANT_CLASS",
+    #    "VEP_Existing_variation",  "VEP_Feature_type",    "VEP_Feature", "VEP_CANONICAL",
+    #    "VEP_BIOTYPE", "VEP_Consequence", "VEP_EXON",   "VEP_INTRON", "VEP_HGVSc", "VEP_HGVSp", "VEP_DISTANCE",
+    #    "VEP_STRAND", "VEP_ENSP", "VEP_SWISSPROT", "VEP_Interpro_domain", "VEP_DOMAINS", "VEP_SIFT",  
+    #    "VEP_PolyPhen", "VEP_CADD_PHRED", "VEP_CADD_RAW", "VEP_LRT_pred", "VEP_M-CAP_pred", "VEP_MetaLR_pred", "VEP_MetaSVM_pred", "VEP_MutationAssessor_pred",
+    #    "VEP_MutationTaster_pred", "VEP_PROVEAN_pred", "VEP_FATHMM_pred", "VEP_ada_score",  "VEP_rf_score"    ,"VEP_LoFtool" , "VEP_gnomAD_exomes_CCR",
+    #    "VEP_ExACpLI" ,"VEP_CLIN_SIG" ,"VEP_SOMATIC", "VEP_PHENO",   "VEP_PUBMED",
+    #     "VEP_AF",  "VEP_MAX_AF",  "VEP_MAX_AF_POPS", "VEP_1000Gp3_AF",  "VEP_1000Gp3_EUR_AF",  "VEP_ExAC_AF",
+    #     "VEP_ExAC_Adj_AF", "VEP_ExAC_EAS_AF", "VEP_ExAC_NFE_AF", "VEP_GTEx_V6p_gene",   "VEP_GTEx_V6p_tissue",
+    #     "VEP_gnomAD_exomes_AF", "VEP_gnomADg_exomes_NFE_AF", "VEP_gnomADg", "VEP_gnomADg_AF_NFE", "VEP_gnomADg_AF_Male",
+    #     "VEP_gnomADg_AF_Female", "VEP_gnomADg_Hom", "VEP_gnomADg_POPMAX", "VEP_gnomADg_AF_POPMAX" ,  
+    #     "VEP_kaviar_AF", "VEP_kaviar_AC", "VEP_kaviar_AN", "VEP_phastCons20way_mammalian",
+    #     "VEP_phastCons20way_mammalian_rankscore",  "VEP_phyloP20way_mammalian",   "VEP_phyloP20way_mammalian_rankscore",
+    #     "VEP_MaxEntScan_alt", "VEP_MaxEntScan_diff", "VEP_MaxEntScan_ref"]
 
 
-    args = parse_args()
-    print(myFields)
- 
-    start_time = time.time()
+
 
 
     # # RAQUEL
@@ -83,14 +86,13 @@ def main():
     # read all the file to capture info fields.
     info_fields = get_info_fields(args.input_file)
 
-
-    # the DeNovo fields are added to output when ped information with parent information 
-
+    #the DeNovo fields are added to output when ped information with parent information 
+    myFields_family = []
     if args.family: 
         #a = info_fields.index("VEP_MaxEntScan_ref")
         for f in ["hiConfDeNovo","loConfDeNovo"]:
-            if f in info_fields:
-                myFields = myFields+[f]
+            if f in info_field:
+                myFields_family.append(f)
             else:
                 print("Field %s not found in VCF file" %(f))
 
@@ -143,8 +145,11 @@ def main():
                 if out_header!='':
                     head=out_header
                     list_header = out_header.split("\t")
-                    
-                    filteringPos = [ list_header.index(x)  for x in myFields if x in list_header]
+                    #print(list_header)
+
+                    filteringPos = [ list_header.index(x)  for x in list_header  if (x not in myFields) and ("_DP" not in x) and ("_AD" not in x) and ("_GT" not in x)]
+ 
+
 
                     field_list = args.genotype_fields.split(',')
                     field_names = [ "_" + x for x in field_list ]
@@ -165,7 +170,7 @@ def main():
 
                         
                     out_HEADER = add_internal_frequencies(args, head, wrote_header, filteringPos) # change header
-
+                    #print(out_HEADER)
                     if args.output_file:
                         out_f.write('%s\n' % out_HEADER)
                     else:

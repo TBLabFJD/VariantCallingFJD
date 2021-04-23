@@ -96,6 +96,15 @@ def main():
 	args = parser.parse_args()
 
 
+
+	## basespace option not possible for bam files
+	
+	if args.skipMapping and args.basespace:
+		print("ERROR: Bam files can not be retrieved from BaseSpace. Choose -b or -k but not both \n")
+		sys.exit()
+
+
+
 	# label for current lab
 
 	if args.basespace:
@@ -116,14 +125,6 @@ def main():
 	stderrAll="FJD_"+run+".err"
 	sys.stderr = open(stderrAll, 'w', 0)
 
-
-
-
-	## basespace option not possible for bam files
-	
-	if args.skipMapping and args.basespace:
-		sys.stderr.write("ERROR: Bam files can not be retrieved from BaseSpace \n")
-		sys.exit()
 
 
 
@@ -358,8 +359,7 @@ def main():
 		subprocess.call(cmdSamples, shell=True)
 
 
-		# if project samples, we save the entire biosample name but check with the input sample file by looking at the first 7 characters 
-
+		# we store samples associated to project (not only the biosample name but also the dnaid (first 7 positions))
 		dnaids_dicc = {}
 		with open(datasetfile) as myfile:
 			lines = myfile.read().splitlines()
@@ -368,9 +368,11 @@ def main():
 				biosampleName = line.split()[1]
 				dnaid = biosampleName[0:7]
 				dnaids_dicc[dnaid] = biosampleName
+		
+		# which of project samples are in my file of samples?
 		for dnaid,biosampleName in dnaids_dicc.iteritems():
 			sample_names.append(biosampleName)			
-			if args.samples == "all" or dnaid in file_samples:
+			if args.samples == "all" or dnaid in file_samples or biosampleName in file_samples:
 				sample_namesT.append(biosampleName)
 		dnaids = dnaids_dicc.keys()	
 
@@ -464,8 +466,8 @@ def main():
 
 					myargs_pipe1 = [pipelinesPath+"pipeline1_downloadMapping.sh", args.input, args.output, sample_name, str(args.threads), run, str(args.basespace), str(cat), inputDir,  args.genome, str(args.local), str(args.basemountuser), softwarePath]
 					myargs_pipe1_2 = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, str(args.duplicates), args.genome, str(args.memory)]
-					myargs_pipe2 = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh", args.input, args.output, sample_name, str(args.memory), run, args.panel, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.intervals), str(removebam),  str(args.padding), softwarePath]
-					myargs_pipe4 = [pipelinesPath+"pipeline4_LohAnnotationOutput.sh", args.output, sample_name, str(4), run, args.panel, str(args.cvcf), args.genome, str(args.local), args.pathology, str(args.genefilter), softwarePath]
+					myargs_pipe2 = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh", args.input, args.output, sample_name, str(args.memory), run, args.panel, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.intervals), str(removebam),  str(args.padding), "WES", softwarePath]
+					myargs_pipe4 = [pipelinesPath+"pipeline4_LohAnnotationOutput.sh", args.output, sample_name, str(4), run, args.panel, str(args.cvcf), args.genome, str(args.local), args.pathology, str(args.genefilter), str(args.single), softwarePath]
 
 
 					start_time = time.time()
@@ -496,6 +498,8 @@ def main():
 
 						if not args.cvcf:
 
+							# Annotation ,  processing of output and moving of files for MAF
+
 							jobname_pipe4 =  "annotation_"+sample_name
 							annotid=sbatch(jobname_pipe4, args.output, ' '.join(myargs_pipe4), time=args.time, threads=args.memory/4, mail=args.mail, dep=snpid) # vcf annotation and complementary analysis to generate full output
 							jobid_list_snpAnnot.append(annotid)
@@ -521,7 +525,7 @@ def main():
 		sys.stdout.write("  RUNNING COMBINED GENOTYPING   \n")
 		sys.stdout.write("...............................\n\n")
 
-		myargs_pipe3 = [pipelinesPath+"pipeline3_combinedGenotyping.sh", args.output, str(args.local), run, args.genome, str(args.cvcf), args.pedigree, str(args.memory), softwarePath]
+		myargs_pipe3 = [pipelinesPath+"pipeline5_combinedGenotyping.sh", args.output, str(args.local), run, args.genome, str(args.cvcf), args.pedigree, softwarePath]
 		jobname_pipe3 =  "combinedGenotyping"+"_"+run
 		depJobs = ':'.join(jobid_list_snpAnnot)  	
 		combid=sbatch(jobname_pipe3, args.output, ' '.join(myargs_pipe3), time=args.time, mem=4, threads=1, mail=args.mail, dep=depJobs) # mmapping alone: just to take advantage of threads
@@ -530,19 +534,15 @@ def main():
 
 
 
-		# Annotation and processing of output 
+		# Annotation ,  processing of output and moving of files for MAF
 		
-		myargs_pipe4[3] = run
+		myargs_pipe4[2] = run
 		job_name="annotation_"+run
 		jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe4), time=args.time, mem=args.memory/4, threads=4, mail=args.mail, dep=combid) 
 		cvcfjobs_list.append(jobid)
 		sys.stdout.write("JOB ID SNV ANNOTATION: %s\n" %(jobid))
 
-		
 
-
-
-	#*********** 3. If everything went well we should copy results to MAF folder!!!!!!!!!!!
 
 
 
@@ -565,8 +565,8 @@ def main():
 
 		# write arguments for users 
 		sys.stdout.write("Copy number variants calling with arguments:\n")
-		myargs_desc = [ "OUTPUT DIR", "BAM DIRECTORY", "SAMPLES FILE", "RUN LABEL", "NUMBER THREADS", "PANEL BED FILE", "WINDOW", "TASK FOLDER", "LOCAL", "METHODS", "GENE LIST", "GENOME"]
-		myargs_cnv = [ args.output, bamF,  args.samples, run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method, str(args.genefilter), str(args.genome)]
+		myargs_desc = [ "OUTPUT DIR", "BAM DIRECTORY", "SAMPLES", "RUN LABEL", "NUMBER THREADS", "PANEL BED FILE", "WINDOW", "TASK FOLDER", "LOCAL", "METHODS", "GENE LIST", "GENOME"]
+		myargs_cnv = [ args.output, bamF,  ",".join(sample_namesT), run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method, str(args.genefilter), str(args.genome)]
 		[sys.stdout.write("%s: %s\n" %(myargs_desc[i], myargs_cnv[i])) for i in range(1,len(myargs_cnv))]
 		sys.stdout.write("BAM FILES:\n%s" %("\n".join(glob(bamF + '/*.bam'))))
 
@@ -576,7 +576,7 @@ def main():
 		depJobs_list = jobid_list_mapProc
 
 		for method in method.split(","):
-			myargs_cnv = [pipelinesPath+"pipeline10_CNVcalling.sh", args.input, args.output, str(args.skipMapping), args.samples, run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method,   str(args.genefilter), str(args.genome), str(args.qcnvthreshold)]
+			myargs_cnv = [pipelinesPath+"pipeline9_CNVcalling.sh", args.input, args.output, str(args.skipMapping),  ",".join(sample_namesT), run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method,   str(args.genefilter), str(args.genome), str(args.qcnvthreshold)]
 			job_name = method+"_CNV_"+run
 
 			if method == "QC":

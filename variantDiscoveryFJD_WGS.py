@@ -64,8 +64,8 @@ def main():
 	parser.add_argument('-a', '--analysis', help='\t\tType of analysis to run', required=False, choices={"mapping", "snv", "all"}, default="snv")
 	parser.add_argument('-c', '--cvcf', help='\t\tCombined genotyping. Number of samples must be higher than 2', required=False, action='store_true')
 	parser.add_argument('-l', '--local', help='\t\tRun in local', required=False, action='store_true')
-	parser.add_argument('-t', '--threads', help='\t\tNumber of threads', type=int, required=False, default=4)
-	parser.add_argument('-M', '--memory', help='\t\tNumber of GBs for VEP running', type=int, required=False, default=5)
+	parser.add_argument('-t', '--threads', help='\t\tNumber of threads for mapping steps', type=int, required=False, default=4)
+	parser.add_argument('-M', '--memory', help='\t\tNumber of total GBs for GATK Java and VEP', type=int, required=False, default=5)
 	parser.add_argument('-T', '--time', help='\t\tNumber of hours', type=int, required=False, default=1000)
 	parser.add_argument('-m', '--mail', help='\t\tMail account', required=False)
 	parser.add_argument('-S', '--single' , help='\t\tConserve sample VCFs when running combined genotyping (CVCF)', required=False, action='store_true')
@@ -293,12 +293,11 @@ def main():
 				sys.stdout.write("JOB ID MAPPING: %s\n" %(jobid_map))
 				depJobs_list.append(jobid_map)
 
-				# sbatch processing (2 proc - fixed)
-				myargs_pr = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, "False", args.genome]
-				#myargs_pr = [pipelinesPath+"pipeline2_SNVprocessingCallingFiltering.sh", args.input, args.output, sample_name, str(args.threads), run, "False", "False", str(cat), inputDir, sampleAnalysis, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.pathology), "False", "True", str(removebam), str(args.genefilter), "False", softwarePath]
+				# sbatch processing (1 proc - fixed)
+				myargs_pr = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, "False", args.genome,  str(args.memory)]
 				print(myargs_pr)
 				jobname_pr = "preprocessing_"+sample_name
-				jobid_pr=sbatch(jobname_pr, args.output, ' '.join(myargs_pr), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=jobid_map) # bam processing 
+				jobid_pr=sbatch(jobname_pr, args.output, ' '.join(myargs_pr), time=args.time, mem=args.memory, threads=1, mail=args.mail, dep=jobid_map) # bam processing. we give the whole memory for gatak java
 				sys.stdout.write("JOB ID PREPROCESSING: %s\n" %(jobid_pr))
 				depJobs_list.append(jobid_pr)
 
@@ -329,7 +328,6 @@ def main():
 				for element in intervals_files:
 
 					print(element)
-					args.panel = element
 
 					interval_n = element.split("_temp_")[1].split("_")[0]
 					print(interval_n)
@@ -340,9 +338,8 @@ def main():
 					if not os.path.exists(output_interval):
 						os.makedirs(output_interval)
 
-					myargs = [args.input, output_interval, sample_name, str(args.threads), run, args.panel, "False", str(cat), inputDir, sampleAnalysis, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.pathology), str(args.intervals), "True", str(removebam), str(args.genefilter), "0", "False", str(args.memory*4), softwarePath, interval_n]
-
-					myargs_pipe = [pipelinesPath+"pipeline2_SNVprocessingCallingFiltering.sh"]+myargs # Just calls to SNV processing and calling
+					myargs = [args.input, output_interval, sample_name, str(args.memory), run, element, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local),  str(args.intervals),  str(removebam), "0", "WGS", softwarePath, interval_n]
+					myargs_pipe = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh"]+myargs # Just calls to SNV processing and calling
 
 					jobid_hc=sbatch(job_name, args.output, ' '.join(myargs_pipe), time=args.time, mem=args.memory, threads=4, mail=args.mail, dep=jobid_pr) 
 					jobid_hc_list.append(jobid_hc)
@@ -350,11 +347,11 @@ def main():
 					depJobs_list.append(jobid_hc)
 
 
-			
+
 				# Merge by interval GVCFs, genotyping and filtering
 
 				myargs = [args.output, sample_name, args.genome, run, str(args.local), str(args.cvcf), softwarePath]
-				myargs_pipe = [pipelinesPath+"pipeline4_WGSgenotypingFiltering.sh"]+myargs 
+				myargs_pipe = [pipelinesPath+"pipeline6_WGSgenotypingFiltering.sh"]+myargs 
 
 			 	job_name="genotyping"+"_"+sample_name
 				depJobs = ':'.join(jobid_hc_list)  	
@@ -367,11 +364,10 @@ def main():
 
 				# Annotation, LOH and processing of output 
 
-				#for chrome in ["chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX"]:
-				for chrome	in ["chrX"]:
+				for chrome in ["chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX"]:
 
 					myargs = [args.output, sample_name, str(args.threads), run, str(args.local), softwarePath, chrome]
-					myargs_pipe = [pipelinesPath+"pipeline5_WGSAnnotation.sh"]+myargs # Just calls to VEP annotation for a interval
+					myargs_pipe = [pipelinesPath+"pipeline7_WGSAnnotation.sh"]+myargs # Just calls to VEP annotation for a interval
 
 				 	job_name="annotation"+chrome+"_"+sample_name
 				 	jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep=jobid_genotyp) 
@@ -384,12 +380,12 @@ def main():
 				# Merge annotated VCFs generated per-interval for individual sample
 
 				myargs = [args.output, sample_name, str(args.threads), run, str(args.local), softwarePath, str(args.genefilter)]
-				myargs_pipe = [pipelinesPath+"pipeline4_WGSmergeAnnotationProcessing.sh"]+myargs # Just calls to VEP annotation for a interval
+				myargs_pipe = [pipelinesPath+"pipeline8_WGSmergeAnnotationProcessing.sh"]+myargs # Just calls to VEP annotation for a interval
 
-			 	job_name="annotationMergeProc"+"_"+sample_name
+			 	job_name="annotMergeProc"+"_"+sample_name
 				depJobs = ':'.join(jobid_annot_list)  	
 			 	jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs) 
-			 	sys.stdout.write("JOB ID SNV ANNOTATION PROCESSING: %s\n" %(jobid))
+			 	sys.stdout.write("JOB ID ANNOTATION MERGE AND OUTPUT PROCESSING: %s\n" %(jobid))
 			 	depJobs_list.append(jobid)
 
 				

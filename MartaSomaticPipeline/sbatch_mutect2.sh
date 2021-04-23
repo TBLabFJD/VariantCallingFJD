@@ -99,8 +99,25 @@ gatk CalculateContamination -I $pileupsummaries --tumor-segmentation segments.ta
 
 
 ### FilterMutectCallswith the -ob-priors argument
-####### ERROOOOOOOOOOR!!!! FALTA argumento -R (reference)
 gatk FilterMutectCalls -R $reffasta -V $unfilteredvcf --tumor-segmentation segments.table --contamination-table $calculatecontaminationtable --ob-priors $readmodel -O $filtered.vcf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## RESOURCE: GATK4

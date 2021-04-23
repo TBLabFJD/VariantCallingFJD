@@ -11,10 +11,6 @@
 ## ARGUMENTS ##
 ###########
 
-# MDAP=$1
-# sample=$2
-# fasta=$3 # Ref Fasta
-
 filestocombine=$1
 output=$2
 run=$3
@@ -63,10 +59,10 @@ fi
 # Merge GVCFs generated per-interval for the same sample
 
 
-echo -e "\n\n\n- merge GVCFS (GATK) "
+echo -e "\n\n\n- merge VCFS/GVCF (GATK) "
 echo -e "-----------------------------\n"
 
-echo -e '\nUsing GATK mergeGVCF for merging GVCFs from different intervals'
+echo -e '\nUsing GATK mergeGVCF for merging VCFs/GVCFs from different intervals/chromosomes'
 start=`date +%s`
 
 gatk MergeVcfs  \

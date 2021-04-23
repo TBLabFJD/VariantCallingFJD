@@ -163,10 +163,10 @@ def fileCombiner(filesdir,filespattern):
 
 
 shortout = fileCombiner(CNVs_calling_results, '*.shortlist.txt')
-shortout.to_csv(output_folder + 'CoNVaDING' + "_shortlist.txt", sep='\t', index = False)
+shortout.to_csv(output_folder + 'CoNVaDING' + ".shortlist.txt", sep='\t', index = False)
 
 totalout = fileCombiner(CNVs_calling_results, '*.totallist.txt')
-totalout.to_csv(output_folder + 'CoNVaDING' + "_totallist.txt", sep='\t', index = False)
+totalout.to_csv(output_folder + 'CoNVaDING' + ".totallist.txt", sep='\t', index = False)
 
 
 #Combining shortlist with scores of totallist
@@ -207,7 +207,7 @@ for i in range(0,len(combiout)):
 	combiout.loc[i, "GENE_VC"] = np.mean(rows["GENE_VC"])
 	combiout.loc[i, "SHAPIRO-WILK"] = np.mean(rows["SHAPIRO-WILK"])
 
-combiout.to_csv(output_folder + 'CoNVaDING' + "_results.txt", sep='\t', index = False)
+combiout.to_csv(output_folder + 'CoNVaDING' + ".results.txt", sep='\t', index = False)
 
 
 #print("EXIT STATUS: 0")

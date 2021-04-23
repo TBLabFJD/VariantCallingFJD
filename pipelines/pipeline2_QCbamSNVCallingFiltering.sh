@@ -20,7 +20,8 @@ local=${10}
 intervals=${11}
 removebam=${12}
 padding=${13}
-softwarePath=${14}
+analysis=${14}
+softwarePath=${15}
 tasksPath=${softwarePath}/tasks
 
 
@@ -31,17 +32,23 @@ bamfile=${bamF}/${sample}.bam
 
 
 
-printf "\n..........................\n"
-printf "CALCULATE COVERAGE $sample \n"
-printf "..........................\n"
 
-$tasksPath/mosdepth.sh $local $run $MDAP $sample $bamfile $panel $padding snv
-s1="$?"
-if [ "$s1" = "1" ]  ; then exit 0; fi
+if [ "$analysis" != "WGS" ] 
+
+then 
 
 
-#### cortar el job
+	printf "\n..........................\n"
+	printf "CALCULATE COVERAGE $sample \n"
+	printf "..........................\n"
 
+
+	$tasksPath/mosdepth.sh $local $run $MDAP $sample $bamfile $panel $padding snv
+	s1="$?"
+	if [ "$s1" = "2" ] ; then exit 0;  elif [ "$s1" = "1" ]; then exit 1; fi
+
+
+fi
 
 
 printf "\n\n.......................\n"

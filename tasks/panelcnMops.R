@@ -96,11 +96,11 @@ finaltable$CN <- sub("CN4","HOM_DUP",finaltable$CN)
 
 finaltable <- finaltable[!grepl("lowQual",finaltable$lowQual),] # Delete rows with low quality
 
-write.table(finaltable, file = paste('panelcn.MOPS', '_results.txt', sep=''), sep='\t', quote=F, row.names=F)
+write.table(finaltable, file = paste('panelcn.MOPS', '.results.txt', sep=''), sep='\t', quote=F, row.names=F)
 
 toAnnotateTable <- data.frame(finaltable$Chr, finaltable$Start, finaltable$End, finaltable$CN)
 
-write.table(toAnnotateTable, file = paste('panelcn.MOPS', '_toAnnotate.txt', sep=''), sep='\t', quote=F, row.names=F, col.names = FALSE)
+write.table(toAnnotateTable, file = paste('panelcn.MOPS', '.toAnnotate.txt', sep=''), sep='\t', quote=F, row.names=F, col.names = FALSE)
 
 #******************************************************#  
 # Función que se le da directamete la matriz de conteo #  ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡ CAMBIAR !!!!!!!!!!!!!!!!!!!!!!

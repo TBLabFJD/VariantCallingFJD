@@ -86,11 +86,11 @@ if [ "$cvcf" = "True" ]; then
 	printf '\n\nSplitting VCF into individual samples to compute LOH...'
 
 
-	for sample in `bcftools query -l $SNV/${name}.gatkLabeled.vcf`
+	for sample in `bcftools query -l $SNV/${name}.final.vcf`
 	do
 		gatk SelectVariants --exclude-non-variants -R $fasta \
-		-V $SNV/${name}.gatkLabeled.vcf \
-		-O $SNV/${sample}.gatkLabeled.vcf -sn $sample --exclude-non-variants
+		-V $SNV/${name}.final.vcf \
+		-O $SNV/${sample}.final.vcf -sn $sample --exclude-non-variants
 
 		if [ "$?" = "0"  ]; then
 			echo -e  '\nEXIT STATUS: 0'
@@ -101,7 +101,7 @@ if [ "$cvcf" = "True" ]; then
 		fi 
 
 
-		plink $params --vcf $SNV/${sample}.gatkLabeled.vcf  --out $PLINK/${sample} 1>&2
+		plink $params --vcf $SNV/${sample}.final.vcf  --out $PLINK/${sample} 1>&2
 
 		if [ "$?" = "0"  ]; then
 			echo -e  '\nEXIT STATUS: 0'
@@ -115,10 +115,6 @@ if [ "$cvcf" = "True" ]; then
 		fi 
 
 
-		if [ "$single" != "True" ]; then
-			rm $SNV/${sample}.gatkLabeled.vcf*
-		fi
-
 	done 
 
 
@@ -130,7 +126,7 @@ if [ "$cvcf" = "True" ]; then
 else 
 
 
-	plink $params --vcf $SNV/${name}.gatkLabeled.vcf --out $PLINK/${name} 1>&2
+	plink $params --vcf $SNV/${name}.final.vcf --out $PLINK/${name} 1>&2
 
 
 

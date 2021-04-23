@@ -20,7 +20,7 @@ option_list=list(
   make_option(c('-o','--outputdir'),type="character", help="Output directory."),
   make_option(c('-n','--name'),type="character", help="Project name."),
   make_option(c('-b','--bed'),type="character",default="genome", help="Bed file with genes found in panel"),
-  make_option(c('-s','--samples'), type="character", help="File with negative samples"),
+  make_option(c('-s','--samples'), type="character", help="Samples to keep"),
   make_option(c("-d","--dir"),type="character", help="Directory with input bam files to analyse."))
 
 
@@ -326,7 +326,7 @@ data_out2$PM_TARGETS <- sapply(data_out2$PM_TARGETS, function(x) interval.maker(
 # Remove lines that are not in the sample list
 total_samples <- unique(unlist(lapply(list.files(opt$dir, pattern = ".bam"), function(x) strsplit(x, split = ".", fixed = T)[[1]][1])))
 if(opt$samples!="all"){
-  analyced_samples = intersect(total_samples, read.delim2(opt$samples, sep=",", stringsAsFactors = F, header=F)[,2])
+  analyced_samples = intersect(total_samples, strsplit(opt$samples, split=",")[[1]])
   data_out3 <- data.frame(stringsAsFactors = FALSE)
   for (i in analyced_samples){
     data_out_parcial <- data_out2[grepl(i,data_out2[,1]),]

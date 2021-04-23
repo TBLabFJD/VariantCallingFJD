@@ -284,11 +284,11 @@ finalcall=cbind(finalcall[,1:7],length_exon,finalcall[,10:14])
 
 finalcall[,"cnv"] <- toupper(finalcall[,"cnv"]) # Transform del/dup to DEL/DUP
 
-write.table(finalcall, file = paste( 'CODEX2', '_results.txt', sep=''), sep='\t', quote=F, row.names=F)
+write.table(finalcall, file = paste( 'CODEX2', '.results.txt', sep=''), sep='\t', quote=F, row.names=F)
 
 toAnnotateTable <- data.frame(finalcall[,"chr"], finalcall[,"st_bp"], finalcall[,"ed_bp"], toupper(finalcall[,"cnv"]))
 
-write.table(toAnnotateTable, file = paste( 'CODEX2','_toAnnotate.txt', sep=''), sep='\t', quote=F, row.names=F, col.names = FALSE)
+write.table(toAnnotateTable, file = paste( 'CODEX2','.toAnnotate.txt', sep=''), sep='\t', quote=F, row.names=F, col.names = FALSE)
 
 
 #stop clock

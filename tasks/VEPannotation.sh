@@ -10,11 +10,10 @@
 ###############
 
 
-local=$1
-threads=$2
-VCF_IN=$3
-softwarefile=$4
-interval=$5
+threads=$1
+VCF_IN=$2
+softwarefile=$3
+interval=$4
 
 
 
@@ -26,16 +25,16 @@ interval=$5
 
 
 module load vep/release103
-VEP="/usr/local/bioinfo/vep/ensembl-vep/vep"
-FILTER_VEP='/usr/local/bioinfo/vep/ensembl-vep/filter_vep'
+VEP="/usr/local/bioinfo/vep/ensembl-vep-release-103/vep"
+FILTER_VEP='/usr/local/bioinfo/vep/ensembl-vep-release-103/filter_vep'
 VEP_CACHE='/usr/local/bioinfo/vep/ensembl-vep/t/testdata/cache/homo_sapiens/'
 VEP_FASTA="/home/proyectos/bioinfo/references/VEPfasta/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
-PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep/Plugins
+PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep-release-103/Plugins
 PLUGIN_DBS="/home/proyectos/bioinfo/references/VEPdbs"
 dbNSFP_DB="${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz"
 CCS_DB="/home/proyectos/bioinfo/references/CCS/ccrs.autosomes.v2.20180420.bed.gz"
 DENOVO_DB="/home/proyectos/bioinfo/references/denovodb/denovo-db.non-ssc-samples.variants.vcf.gz"
-#MAF="/home/proyectos/bioinfo/fjd/MAF_FJD"
+MAF_FJD_COHORT="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/db/latest/MAFdb_AN20_latest.vcf.gz"
 
 title="MAPPING"
 
@@ -143,10 +142,9 @@ perl $VEP \
 --custom ${PLUGIN_DBS}/Kaviar-160204-Public/vcfs/Kaviar-160204-Public-hg19.vcf.gz,kaviar,vcf,exact,0,AF,AC,AN \
 --custom ${CCS_DB},gnomAD_exomes_CCR,bed,overlap,0,ccr_pct \
 --plugin CADD,${PLUGIN_DBS}/InDels.tsv.gz,${PLUGIN_DBS}/whole_genome_SNVs.tsv.gz \
+--custom ${MAF_FJD_COHORT},FJD_MAF,vcf,exact,0,AF,AN \
 --custom ${DENOVO_DB},denovoVariants,vcf,exact,0,SAMPLE_CT \
 -i $VCF_FILTERED -o $VCF_ANNOTATED
-
-#--custom MAF_FJD_COHORT \
 
 
 if [ "$?" = "0" ]; then
@@ -157,7 +155,6 @@ else
 	printf "\nERROR: PROBLEMS WITH VEP ANNOTATION"
 	exit 1
 fi
-
 
 
 

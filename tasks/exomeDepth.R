@@ -29,7 +29,7 @@ option_list=list(
   make_option(c('-o','--outputdir'),type="character", help="Output directory."),
   make_option(c('-n','--name'),type="character", help="Output directory."),
   make_option(c('-b','--bed'),type="character",default="genome", help="Bed file with genes found in panel"),
-  make_option(c('-s','--samples'), type="character", help="File with negative samples"))
+  make_option(c('-s','--samples'), type="character", help="File with negative samples", default="all"))
 
 
 opt_parser=OptionParser(option_list = option_list)

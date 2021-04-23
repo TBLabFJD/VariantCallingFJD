@@ -30,11 +30,11 @@ module load miniconda/3.6
 module load bedtools
 
 softwareFile="${MDAP}/software_${run}.txt"
-title="LOH"
+title="COVERAGE QC"
 
 if [ ! -f $softwareFile ] || ! grep -q $title $softwareFile  ; then
 
-	printf "LOH:\n" >> ${softwareFile}
+	printf "COVERAGE QC:\n" >> ${softwareFile}
 	/usr/local/bioinfo/plink/plink --version >> ${softwareFile}
 
 fi
@@ -113,7 +113,7 @@ if [ "$s1" = "0" ]  &&  [ "$s2" = "0" ]; then
 	printf '\nEXIT STATUS: 0'
 	printf '\nCOVERAGE QC for '${sample}' DONE\n' 
 	
-	#rm ${QC}/${sample}_qc*
+	rm ${QC}/${sample}_qc*
 
 	pass=$(awk 'BEGIN{if ('$cov'>'$covPerc') print 0}')
 
@@ -125,7 +125,7 @@ if [ "$s1" = "0" ]  &&  [ "$s2" = "0" ]; then
 		echo -e $sample"\t"$readthreshold"\t"$cov"\tFAILED\t"$run"\t"$bamfile >> ${QC}/minCovFilterResults_${analysis}_${run}.txt
 		
 		printf '\nERROR ***************SKIPPING '${analysis}' ANALYSIS FOR SAMPLE '${sample}'.\n'
-		exit 1
+		exit 2
 	fi
 else
 	printf "\nERROR: PROBLEMS WITH COVERAGE QC"
