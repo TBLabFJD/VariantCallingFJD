@@ -37,7 +37,7 @@ printf "......................................................\n"
 
 if [ "$local" != "True" ]; then
 
-	module load miniconda/2.7
+#	module load miniconda/2.7
 	module load bwa/0.7.15
 	module load samtools/1.9
 	module load picard/2.18.9
@@ -174,7 +174,8 @@ mkdir $TMP
 if [ "$skipmapping" != "True" ]; then
 
 	if [ "$cat" = "True" ] || [ "$basespace" = "True" ]; then
-		python $utilitiesPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample $user
+
+		python2 $utilitiesPath/bscpCat_sample.py $basespace $fastqFolder $INPUT $sample $user
 		if [ "$?" != "0" ]; then
 			printf "\nERROR: PROBLEMS WITH BASESPACE DATA DOWNLOADING/CONCATENATION"
 			exit 1
@@ -282,14 +283,14 @@ if [ "$skipmapping" != "True" ]; then
 
 	header=$(zcat $foward | head -n 1)
 	id=$(echo  $header | head -n 1 | cut -f 1-4 -d':' | sed 's/@//' | sed 's/:/_/g')
-	sm=$(echo  $header | head -n 1 | grep -Eo '[ATGCN]+$')
+	#sm=$(echo  $header | head -n 1 | grep -Eo '[ATGCN]+$')
 	echo  -e "\nThis is how the new header looks\n"
-	echo  -e '@RG\tID:'$id'\tSM:'${sample}'\tLB:'$id'_'$sm'\tSM:'$id'_'$m'\tPL:ILLUMINA'
+	echo  -e '@RG\tID:'$id'\tSM:'${sample}'\tPL:ILLUMINA'
 
-	echo -e 'bwa mem -v 3 -t '$threads' -R @RG\tID:'$id'\tSM:'${sample}'\tLB:'$id'_'$sm'\tPL:ILLUMINA '$HG19'/ucsc.hg19.fasta'$foward$reverse'>'$MD'/mapped_'${sample}'.sam'
+	echo -e 'bwa mem -v 3 -t '$threads' -R @RG\tID:'$id'\tSM:'${sample}'\tPL:ILLUMINA '$HG19'/ucsc.hg19.fasta'$foward$reverse'>'$MD'/mapped_'${sample}'.sam'
 
 
-	bwa mem -v 3 -t $threads -R '@RG\tID:'$id'\tSM:'${sample}'\tLB:'$id'_'$sm'\tPL:ILLUMINA' \
+	bwa mem -v 3 -t $threads -R '@RG\tID:'$id'\tSM:'${sample}'\tPL:ILLUMINA'\
 	$HG19/ucsc.hg19.fasta \
 	$foward \
 	$reverse > $MD/mapped_${sample}.sam
@@ -818,7 +819,7 @@ fi
 
 # if not combined analysis we remove all g.vcfs
 
-#rm $HCGVCFD/${sample}*
+rm $HCGVCFD/${sample}*
 
 
 
@@ -889,8 +890,7 @@ printf '\n\nFiltering by quality and chromosome...'
 
 perl $FILTER_VEP \
 -i $VCF_IN -o $VCF_OUT \
---filter "QUAL > 100 and FILTER = PASS" \
---filter "CHROM in chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chr23,chrX,chrY" --force_overwrite 
+--filter "(QUAL > 100) and (FILTER = PASS) and (CHROM in chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chr23,chrX,chrY)" --force_overwrite 
 
 
 
@@ -957,44 +957,23 @@ fi
 
 printf '\n\nFiltering by population frequencies...\n'
 
+
 perl $FILTER_VEP \
--i $VCF_FILTERED -o $VCF_FILTERED_2 \
---filter "DP > 10" \
---filter "CANONICAL is YES" \
---filter "Consequence is 3_prime_UTR_variant or Consequence is 5_prime_UTR_variant or Consequence is intron_variant or Consequence is splice_donor_variant or Consequence is splice_acceptor_variant or Consequence is splice_region_variant or Consequence is synonymous_variant or Consequence is missense_variant or Consequence is inframe_deletion or Consequence is inframe_insertion or Consequence is stop_gained or Consequence is frameshift_variant or Consequence is coding_sequence_variant" --force_overwrite 
+-i $VCF_FILTERED -o $VCF_FILTERED_3 \
+--filter "(DP > 10) and (MAX_AF < 0.05 or not MAX_AF)" \
+--force_overwrite
 
 
 if [ "$?" = "0" ]; then
 	printf '\nEXIT STATUS: 0'
-	printf '\n VEP FREQUENCY FILTERING 1 for '${sample}' DONE\n' 
+	printf '\n VEP FREQUENCY FILTERING for '${sample}' DONE\n' 
 	rm $VCF_FILTERED
 
 else
-	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING 1"
+	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING"
 	exit 1
 fi
 
-
-
-
-
-
-
-perl $FILTER_VEP \
--i $VCF_FILTERED_2 -o $VCF_FILTERED_3 \
---filter "AF < 0.01 or not AF" \
---filter "(ExAC_EAS_AF < 0.01 or not ExAC_EAS_AF) and (1000Gp3_AF < 0.01 or not 1000Gp3_AF) and (1000Gp3_EUR_AF < 0.01 or not 1000Gp3_EUR_AF ) and (gnomAD_exomes_AF < 0.01 or not gnomAD_exomes_AF) and (ExAC_AF < 0.01 or not ExAC_AF) and (ExAC_Adj_AF < 0.01 or not ExAC_Adj_AF) and (ExAC_NFE_AF < 0.01 or not ExAC_NFE_AF) and (gnomAD_exomes_NFE_AF < 0.01 or not gnomAD_exomes_NFE_AF) and (gnomAD_genomes_AF < 0.01 or not gnomAD_genomes_AF)" --force_overwrite 
-
-
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\nVEP FREQUENCY FILTERING 2 for '${sample}' DONE\n' 
-	rm $VCF_FILTERED_2
-
-else
-	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING 2"
-	exit 1
-fi
 
 
 

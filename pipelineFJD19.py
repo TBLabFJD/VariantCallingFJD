@@ -22,7 +22,7 @@ utilitiesPath =  os.path.dirname(os.path.realpath(__file__))+"/utilities/"
 sys.path.insert(0, utilitiesPath)
 
 
-def sbatch(job_name, folder_out, command, mem=5, time=400, threads=5, mail=None, dep='', wait = '', typedep=None):
+def sbatch(job_name, folder_out, command, mem=5, time=400, threads=5, mail=None, dep='', wait = '', queue=None, typedep=None):
 
 	if dep != '':
 		if typedep!=None:
@@ -38,8 +38,13 @@ def sbatch(job_name, folder_out, command, mem=5, time=400, threads=5, mail=None,
 	if wait==True:
 		wait = '--wait'
 
+	if queue==True:
+ 		partition='--partition=fastbioinfo'
+ 	else:
+ 		partition='--partition=bioinfo'
 
-	sbatch_command = "sbatch -J {} -o {}/{}.out -e {}/{}.err {} -t {}:00:00 --account=bioinfo_serv --partition=bioinfo --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, mem, threads, dep, wait, command)
+
+	sbatch_command = "sbatch -J {} -o {}/{}.out -e {}/{}.err {} -t {}:00:00 --account=bioinfo_serv {} --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, partition, mem, threads, dep, wait, command)
 	sbatch_response = subprocess.check_output(sbatch_command, shell=True)
 	job_id = sbatch_response.split(' ')[-1].strip()
 	return job_id
@@ -63,6 +68,7 @@ def main():
 	parser.add_argument('-l', '--local', help='\t\tRun in local', required=False, action='store_true')
 	parser.add_argument('-t', '--threads', help='\t\tNumber of threads', type=int, required=False, default=1)
 	parser.add_argument('-M', '--memory', help='\t\tNumber of GBs', type=int, required=False, default=5)
+	parser.add_argument('-q', '--queue', help='\t\tUse the fastqueue.', required=False, action="store_true")
 	parser.add_argument('-f', '--genefilter', help='\t\tGene list to filter SNVs', required=False, default=False)
 	parser.add_argument('-T', '--time', help='\t\tNumber of hours', type=int, required=False, default=1000)
 	parser.add_argument('-m', '--mail', help='\t\tMail account', required=False)
@@ -461,12 +467,12 @@ def main():
 						subprocess.call(myargs, stdout=stdout_f, stderr=stderr_f)
 					
 					elif sampleAnalysis=="mapping": # SBATCH AND SAVE JOB IDS FOR MAPPING SAMPLES
-						jobid=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep='')
+						jobid=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, queue=args.queue, dep='')
 						jobid_list.append(jobid)
 						sys.stdout.write("JOB ID: %s\n" %(jobid))
 
 					else: # SBATCH AND SAVE JOB IDS FOR (MAPPING AND SNP) OR (SNP) CALLING SAMPLES
-						jobid_snp=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, dep='')
+						jobid_snp=sbatch(job_name, args.output, ' '.join(myargs), time=args.time, mem=args.memory, threads=args.threads, mail=args.mail, queue=args.queue, dep='')
 						jobid_list_snp.append(jobid_snp)
 						sys.stdout.write("JOB ID: %s\n" %(jobid_snp))
 
@@ -507,7 +513,7 @@ def main():
 		
 		else:
 			depJobs = ':'.join(jobid_list_snp)  # cVCF just dependes on samples jobs id that have been mapped and snp called.
-			jobid2=sbatch(job_name, args.output, ' '.join(myargs_cvcf), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs)
+			jobid2=sbatch(job_name, args.output, ' '.join(myargs_cvcf), time=args.time, mem=args.memory, threads=2, mail=args.mail, queue=args.queue, dep=depJobs)
 			cvcfjobs_list.append(jobid2)
 			sys.stdout.write("JOB ID: %s\n" %(jobid2))
 			sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
@@ -568,20 +574,20 @@ def main():
 					print method
 					sys.stdout.write("\n#########  JOB FOR QUALITY CONTROL OF PANEL FILE AND SAMPLES \n")
 					depJobs = ':'.join(depJobs_list)
-					jobidQC=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
+					jobidQC=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, queue=args.queue, typedep="any")
 					jobidQC_list.append(jobidQC)
 					sys.stdout.write("JOB ID: %s\n" %(jobidQC))
 					sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 				elif method == "MA":
 					sys.stdout.write("\n#########  COMBINING CNV RESULTS FROM ALTERNATIVE METHODS \n")
 					depJobs = ':'.join(vdepCVjobs_list+[jobidQC])
-					jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
+					jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, queue=args.queue,typedep="any")
 					vdepCVjobs_list.append(jobidMA)
 					sys.stdout.write("JOB ID: %s\n" %(jobidMA))
 					sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 				else:
 					sys.stdout.write("\n#########  CNV CALLING FOR %s\n" %(method))
-					jobidME=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=jobidQC)
+					jobidME=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, queue=args.queue, dep=jobidQC)
 					vdepCVjobs_list.append(jobidME)
 					sys.stdout.write("JOB ID: %s\n" %(jobidME))
 					sys.stdout.write("DEPENDENT JOBS: %s\n" %(jobidQC))
@@ -607,7 +613,7 @@ def main():
 		depJobs_list = jobid_list + jobid_list_snp + jobidQC_list + vdepCVjobs_list + cvcfjobs_list
 		depJobs = ':'.join(depJobs_list)
 		job_name = "removeDirs_"+run
-		jobidREMOVE=sbatch(job_name, args.output, ' '.join(myargs_remove), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
+		jobidREMOVE=sbatch(job_name, args.output, ' '.join(myargs_remove), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, queue=args.queue, typedep="any")
 		sys.stdout.write("JOB ID: %s\n" %(jobidREMOVE))
 		sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 
@@ -643,7 +649,7 @@ def main():
 
 		myargs_summary = [utilitiesPath+"checkproject.sh", args.output, depJobs, run]
 
-		jobidSUM=sbatch(job_name, args.output, ' '.join(myargs_summary), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
+		jobidSUM=sbatch(job_name, args.output, ' '.join(myargs_summary), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, queue=args.queue, typedep="any")
 		sys.stdout.write("JOB ID: %s\n" %(jobidSUM))
 		sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 

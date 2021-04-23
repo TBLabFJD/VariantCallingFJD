@@ -238,46 +238,46 @@ fi
 
 
 
-perl $FILTER_VEP \
--i $VCF_FILTERED_2 -o $VCF_FILTERED_3 \
---filter "AF < 0.01 or not AF" \
---filter "(ExAC_EAS_AF < 0.01 or not ExAC_EAS_AF) and (1000Gp3_AF < 0.01 or not 1000Gp3_AF) and (1000Gp3_EUR_AF < 0.01 or not 1000Gp3_EUR_AF ) and (gnomAD_exomes_AF < 0.01 or not gnomAD_exomes_AF) and (ExAC_AF < 0.01 or not ExAC_AF) and (ExAC_Adj_AF < 0.01 or not ExAC_Adj_AF) and (ExAC_NFE_AF < 0.01 or not ExAC_NFE_AF) and (gnomAD_exomes_NFE_AF < 0.01 or not gnomAD_exomes_NFE_AF) and (gnomAD_genomes_AF < 0.01 or not gnomAD_genomes_AF)" --force_overwrite 
+# perl $FILTER_VEP \
+# -i $VCF_FILTERED_2 -o $VCF_FILTERED_3 \
+# --filter "AF < 0.01 or not AF" \
+# --filter "(ExAC_EAS_AF < 0.01 or not ExAC_EAS_AF) and (1000Gp3_AF < 0.01 or not 1000Gp3_AF) and (1000Gp3_EUR_AF < 0.01 or not 1000Gp3_EUR_AF ) and (gnomAD_exomes_AF < 0.01 or not gnomAD_exomes_AF) and (ExAC_AF < 0.01 or not ExAC_AF) and (ExAC_Adj_AF < 0.01 or not ExAC_Adj_AF) and (ExAC_NFE_AF < 0.01 or not ExAC_NFE_AF) and (gnomAD_exomes_NFE_AF < 0.01 or not gnomAD_exomes_NFE_AF) and (gnomAD_genomes_AF < 0.01 or not gnomAD_genomes_AF)" --force_overwrite 
 
 
-if [ "$?" = "0" ]; then
-	printf '\nEXIT STATUS: 0'
-	printf '\nVEP FREQUENCY FILTERING 2 for '${sample}' DONE\n' 
-	rm $VCF_FILTERED_2
+# if [ "$?" = "0" ]; then
+# 	printf '\nEXIT STATUS: 0'
+# 	printf '\nVEP FREQUENCY FILTERING 2 for '${sample}' DONE\n' 
+# 	rm $VCF_FILTERED_2
 
-else
-	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING 2"
-	exit 1
-fi
-
-
-
-
-
-
-printf '\nVEP annotation and filtering DONE.\n'
-
-
-end=`date +%s`
-runtime=$((end-start))
-printf '\nExecuting time: '$runtime 
+# else
+# 	printf "\nERROR: PROBLEMS WITH VEP FREQUENCY FILTERING 2"
+# 	exit 1
+# fi
 
 
 
 
 
 
-printf "\n\n\n- OUTPUT PROCESSING "
-printf "\n------------------------\n"
+# printf '\nVEP annotation and filtering DONE.\n'
 
-start=`date +%s`
 
-printf '\nFrom VEP annotated VCF to txt file...\n'
-start=`date +%s`
+# end=`date +%s`
+# runtime=$((end-start))
+# printf '\nExecuting time: '$runtime 
+
+
+
+
+
+
+# printf "\n\n\n- OUTPUT PROCESSING "
+# printf "\n------------------------\n"
+
+# start=`date +%s`
+
+# printf '\nFrom VEP annotated VCF to txt file...\n'
+# start=`date +%s`
 
 
 python $utilitiesPath/vep2tsv_woFreq.py $VCF_FILTERED_3 \

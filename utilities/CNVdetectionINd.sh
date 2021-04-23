@@ -20,7 +20,7 @@ methods=${10}
 depth=${11}
 genefilter=${12}
 genome=${13}
-
+# analysis=${14}
 
 
 # REQUIRED MODULES:
@@ -31,8 +31,9 @@ if [ "$local" != "True" ]; then
 	module load bedtools/2.27.0
 	module load R/R
 	module load samtools
-	module load vep/release95
-
+	module load vep/release98
+	module load annotsv/2.2
+	module load perl
 
 	fai="/home/proyectos/bioinfo/references/hg19/ucsc.hg19_convading.fasta.fai"
 	VEP="/usr/local/bio/vep/vep"
@@ -46,6 +47,9 @@ if [ "$local" != "True" ]; then
 	softwareFile="${MDAP}/software_${run}.txt"
 	echo "COPY NUMBER VARIANT CALLING:" >> ${softwareFile}
 	module list 2>> ${softwareFile}
+
+	export ANNOTSV="/usr/local/bioinfo/annotsv/2.2"
+	# alias annotsv=$ANNOTSV/bin/AnnotSV/AnnotSV.tcl
 
 else
 
@@ -172,7 +176,7 @@ fi
 if echo "$methods" | grep -q "ED"; then
 	start=`date +%s`
 	printf "\nRunning ExomeDepth"
-	echo Rscript $utilitiesPath/exomeDepth.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run -s $SAMPLEFILE
+	#echo Rscript $utilitiesPath/exomeDepth.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run -s $SAMPLEFILE
 	Rscript $utilitiesPath/exomeDepth.R -d $HCGVCFD -o $MDAP -b $finalpanel -n $run -s $SAMPLEFILE
 
 	if [ "$?" = "0" ]; then
@@ -256,7 +260,7 @@ if echo "$methods" | grep -q "MA"; then
 	start=`date +%s`
 
 	printf "\nRunning CNV_result_mixer and gene filtering (optional)"
-	Rscript $utilitiesPath/CNV_result_mixer.R -o $MDAP -n $run -b $finalpanel -s $SAMPLEFILE -d $HCGVCFD -f $genefilter
+	Rscript $utilitiesPath/CNV_result_mixer.R -o $MDAP -n $run -b $finalpanel -s $SAMPLEFILE -d $HCGVCFD 
 	
 
 	if [ "$?" = "0" ]; then
@@ -275,8 +279,8 @@ if echo "$methods" | grep -q "MA"; then
 
 	start=`date +%s`
 
-	printf "\nTabulated CNV results to VCF format"
-	Rscript $utilitiesPath/CNV_tsv2vcf.sh $MDAP $run $genome
+	printf "\nTabulated CNV results to VCF format\n"
+	$utilitiesPath/CNV_tsv2vcf.sh $MDAP $run $genome
 
 	end=`date +%s`
 	runtime=$((end-start))
@@ -294,30 +298,20 @@ if echo "$methods" | grep -q "MA"; then
 	## CNVs ANNOTATION ##
 	#####################
 
-	printf '\n\nVEP annotation... ¡¡¡¡¡ TO BE IMPLEMENTED !!!!!!'
+	printf '\n\nCNV annotation... '
 
-	# perl $VEP \
-	# --cache --hgvs --merged --offline --dir $VEP_CACHE --dir_plugins $PLUGIN_DIR --v --fork $threads --assembly GRCh37 --fasta $VEP_FASTA --force_overwrite \
-	# --biotype --regulatory --protein --symbol --allele_number --numbers --domains --uniprot --variant_class \
-	# --canonical \
-	# --sift p --polyphen p --af --max_af \
-	# --format vcf --tab \
-	# --pubmed \
-	# --plugin dbscSNV,${PLUGIN_DBS}/dbscSNV1.1_GRCh37.txt.gz \
-	# --plugin LoFtool,${PLUGIN_DIR}/LoFtool_scores.txt \
-	# --plugin ExACpLI,${PLUGIN_DIR}/ExACpLI_values.txt \
-	# --plugin dbNSFP,${dbNSFP_DB},gnomAD_exomes_AF,gnomAD_exomes_NFE_AF,gnomAD_genomes_AF,1000Gp3_AF,1000Gp3_EUR_AF,ExAC_AF,ExAC_EAS_AF,ExAC_NFE_AF,ExAC_Adj_AF,rs_dbSNP150,phyloP20way_mammalian,phyloP20way_mammalian_rankscore,phastCons20way_mammalian,phastCons20way_mammalian_rankscore,GERP++_RS,GERP++_RS_rankscore,LRT_pred,MutationTaster_pred,MutationAssessor_pred,FATHMM_pred,PROVEAN_pred,MetaLR_pred,MetaSVM_pred,M-CAP_pred,Interpro_domain,GTEx_V6p_gene,GTEx_V6p_tissue \
-	# -i $CNV/${run}_combined_toAnnotate.txt -o $CNV/CNV_${run}_combined_VEP.txt
+	$ANNOTSV/bin/AnnotSV/AnnotSV.tcl -SVinputFile  $CNV/${run}_combined.vcf -outputfile $CNV/${run}_combinedAnnotated.tsv
 
 
-	# if [ "$?" = "0" ]; then
-	# 	printf '\nEXIT STATUS: 0'
-	# 	printf "\nVEP ANNOTATION FOR FILE $CNV/CNV_results_VEP_${run}.txt DONE"
 
-	# else
-	# 	printf "\nERROR: PROBLEMS WITH VEP ANNOTATION"
-	# 	exit 1
-	# fi
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf "\nSV ANNOTATION FOR FILE "${run}"_combined.txt DONE"
+
+	else
+		printf "\nERROR: PROBLEMS WITH ANNOTSV ANNOTATION"
+		exit 1
+	fi
 
 
 
@@ -328,13 +322,48 @@ if echo "$methods" | grep -q "MA"; then
 	# ##############################
 
 
-	# echo -e "\nMerging exomeDepth and VEP output files..."
+	echo -e "\nMerging exomeDepth and VEP output files..."
 
 
-	# Rscript $utilitiesPath/vep_processing.R -c $CNV/CNV_results_${run}_exomedepth.txt -v $CNV/CNV_results_VEP_${run}.txt -o $CNV/FINAL_CNV_results_${run}.txt
+	Rscript $utilitiesPath/CNVfinalMerge.R -d $MDAP -r $run
 
 
-	# echo -e "\nFINAL CNV RESULTS in $CNV/FINAL_CNV_results_${run}.txt"
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf "\nFINAL MERGE FOR FILE "${run}"_combinedAnnotated.tsv DONE"
+
+	else
+		printf "\nERROR: PROBLEMS WITH MERGING MIXER AND ANNOTATED FILE"
+		exit 1
+	fi
+
+
+
+	####################
+	## GENE FILTERING ##
+	####################
+
+
+	echo -e "\nFiltering results by genefilter..."
+
+
+	if [ "$genefilter" != "False" ]; then
+
+		head -n1 $CNV/${run}_final.txt > $CNV/${run}_final_genelist.txt
+		awk -F "\t" 'FNR==NR { a[$1]; next } $3 in a || $18 in a'  $genefilter $CNV/${run}_final.txt >> $CNV/${run}_final_genelist.txt
+
+	fi
+
+	if [ "$?" = "0" ]; then
+		printf '\nEXIT STATUS: 0'
+		printf "\nGENE FILTERING BY INPUT USER LIST DONE"
+
+	else
+		printf "\nERROR: PROBLEMS WITH GENE FILTERING"
+		exit 1
+	fi
+
+
 
 
 

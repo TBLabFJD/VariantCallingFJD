@@ -22,7 +22,7 @@ option_list=list(
   make_option(c('-b','--bed'),type="character",default="genome", help="Bed file with genes found in panel"),
   make_option(c('-s','--samples'), type="character", help="File with negative samples"),
   make_option(c("-d","--dir"),type="character", help="Directory with input bam files to analyse."),
-  make_option(c("-f","--genefile"),type="character", help="File with list of genes to filter results."))
+  make_option(c("-f","--genefile"),type="character", default="False", help="File with list of genes to filter results."))
 
 
 opt_parser=OptionParser(option_list = option_list)
@@ -58,6 +58,11 @@ setwd(output_dir)
 #*****************#
 bedFile_data <- read.delim(bedFile, header = FALSE, stringsAsFactors = FALSE)
 
+if(length(colnames(bedFile_data))<4){
+  cat("ERROR: bed file without NAME field")
+  quit(status = 1)} else if (length(colnames(bedFile_data))>4){
+  bedFile_data = bedFile_data[,1:4]}
+  
 colnames(bedFile_data) <- c("CHR", "START", "STOP", "GENE_NAME")
 bedFile_data$AVG_POS <- (bedFile_data$START + bedFile_data$STOP) / 2 # Create a column with the medium point of the exons
 bedFile_data$CHR <- gsub("chr", "", bedFile_data$CHR)
@@ -337,9 +342,10 @@ if(opt$samples!="all"){
 cat("#Analyzed samples: ", paste(mysamples, collapse = ", "), "\n", sep = "", file = paste(projectname, "_combined.txt", sep = ""))
 
 # Order the output
-data_out2 <- data_out2[order(data_out2$NUM_OF_PROGRAMS, decreasing = TRUE),]
-
-data_out2[data_out2 == ""] <- NA
+if(nrow(data_out2>0)){
+  data_out2 <- data_out2[order(data_out2$NUM_OF_PROGRAMS, decreasing = TRUE),]
+  data_out2[data_out2 == ""] <- NA
+}
 
 
 cat("#HOMO_HETEROZYGOUS: HOMOZYGOUS/HETEROZYGOUS CNV. Only the homozygous CNVs are specyfied like this: PROGRAM(TARGET_DETECTED_BY_THE_PROGRAM), otherwise it was detected as heterozygous.

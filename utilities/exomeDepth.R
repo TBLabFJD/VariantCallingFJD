@@ -67,11 +67,13 @@ if(opt$bed=="genome"){
   myexons[,1] = paste("chr",myexons[,1] ,sep = "") 
 }else{
   myexons = read.delim(file=opt$bed, header = F, stringsAsFactors = F)
-  if(length(colnames(myexons))!=4){
+  if(length(colnames(myexons))<4){
     cat("ERROR: bed file without NAME field")
     quit(status = 1)}
+  else if (length(colnames(myexons))>4){
+    myexons = myexons[,1:4]}
   colnames(myexons) = colnamesbed
-  myexons = myexons[!myexons$chromosome %in% c("chrX","chrY", "X","Y"),]
+  #myexons = myexons[!myexons$chromosome %in% c("chrX","chrY", "X","Y"),]
 }
 
 
@@ -108,9 +110,13 @@ setwd(cnv_output)
 
 save.image(file = paste('exomedepth',"_counts_image.RData", sep=''))
 
-ExomeCount.dafr <- as(my.counts[, colnames(my.counts)], 'data.frame')
+ExomeCount.dafr <- my.counts
 
-ExomeCount.dafr$chromosome <- gsub(as.character(ExomeCount.dafr$space),pattern = 'chr',replacement = '')
+
+
+# ExomeCount.dafr <- as(my.counts[, colnames(my.counts)], 'data.frame')
+# 
+ExomeCount.dafr$chromosome <- gsub(as.character(ExomeCount.dafr$chromosome),pattern = 'chr',replacement = '')
 
 
 
@@ -121,10 +127,10 @@ ExomeCount.dafr$chromosome <- gsub(as.character(ExomeCount.dafr$space),pattern =
 
 
 ExomeCount.mat <- as.matrix(ExomeCount.dafr[, grep(names(ExomeCount.dafr), pattern = '*.bam')])
-rownames(ExomeCount.mat) = ExomeCount.dafr$names
+#rownames(ExomeCount.mat) = ExomeCount.dafr$exon
 nsamples <- ncol(ExomeCount.mat)
-#colnames(ExomeCount.mat) = sapply(colnames(my.counts), function(x) sub(".*applied_bqsr_data_ *(.*?) *.bam*", "\\1", x))
-colnames(ExomeCount.mat) = sapply(colnames(my.counts), function(x) sub(".bam", "",strsplit(x, split = "_",  fixed = T)[[1]][1]))
+#colnames(ExomeCount.mat) = sapply(colnames(ExomeCount.mat), function(x) sub(".bam", "",strsplit(x, split = "_",  fixed = T)[[1]][1]))
+colnames(ExomeCount.mat) = sapply(mybams, function(x) strsplit(x, split = "_",  fixed = T)[[1]][1])
 
 if(opt$samples!="all" && !all(samples %in% colnames(ExomeCount.mat))){
   cat('\nSome of the selected samples can not be found...\n')
@@ -211,7 +217,8 @@ for (i in 1:nsamples) {
                             chromosome = ExomeCount.dafr$chromosome,
                             start = ExomeCount.dafr$start,
                             end = ExomeCount.dafr$end,
-                            name = ExomeCount.dafr$names)
+                           # name = ExomeCount.dafr$names)
+                            name = ExomeCount.dafr$exon)
       
       cat("Detected CNVs:",nrow(all.exons@CNV.calls), "\n", sep=" ")
       

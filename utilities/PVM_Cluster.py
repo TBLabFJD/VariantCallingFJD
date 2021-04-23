@@ -298,11 +298,14 @@ with open(args.input_file, "r") as snp:
 		
 			for i in range(1, len(ad_split)):
 				dp_value = linesplit[fields.index(dp_field)]
+				
 				if dp_value == "0" or dp_value == "NA" or dp_value == ".":
 					myvf.append("")
 
-				else:
+				elif(ad_split[i] == "NA" or ad_split[i] == "."):
+					myvf.append("")
 
+				else:
 					vfs = (float(ad_split[i]) / float(dp_value)) *100
 					myvf.append(str(vfs))
 			

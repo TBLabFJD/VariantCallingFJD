@@ -12,7 +12,6 @@ dir=$MDAP/copy_number_variation_data/
 
 for file in $dir/$run*combined*txt; do
 
-	echo $file
 	combined_file=$file
 	combined_file_tmp=${combined_file}"_tmp"
 	combined_file_noheader=${combined_file}"_noheader"
