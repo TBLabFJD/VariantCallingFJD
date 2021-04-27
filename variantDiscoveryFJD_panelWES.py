@@ -193,6 +193,8 @@ def main():
 		if not os.path.isfile(args.pedigree): 
 			sys.stderr.write("ERROR: Panel file '%s' does not exist\n" %(args.pedigree))
 			sys.exit()
+		else:
+			args.cvcf=True
 	else:
 		args.pedigree="null"
 
@@ -466,7 +468,7 @@ def main():
 
 					myargs_pipe1 = [pipelinesPath+"pipeline1_downloadMapping.sh", args.input, args.output, sample_name, str(args.threads), run, str(args.basespace), str(cat), inputDir,  args.genome, str(args.local), str(args.basemountuser), softwarePath]
 					myargs_pipe1_2 = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, str(args.duplicates), args.genome, str(args.memory)]
-					myargs_pipe2 = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh", args.input, args.output, sample_name, str(args.memory), run, args.panel, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.intervals), str(removebam),  str(args.padding), "WES", softwarePath]
+					myargs_pipe2 = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh", bamF, args.output, sample_name, str(args.memory), run, args.panel, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.intervals), str(removebam),  str(args.padding), "WES", softwarePath]
 					myargs_pipe4 = [pipelinesPath+"pipeline4_LohAnnotationOutput.sh", args.output, sample_name, str(4), run, args.panel, str(args.cvcf), args.genome, str(args.local), args.pathology, str(args.genefilter), str(args.single), softwarePath]
 
 

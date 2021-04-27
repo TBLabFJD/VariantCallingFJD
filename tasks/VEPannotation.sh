@@ -12,8 +12,8 @@
 
 threads=$1
 VCF_IN=$2
-softwarefile=$3
-interval=$4
+softwareFile=$3
+interval=$4 # must be a chromosome 
 
 
 
@@ -93,14 +93,14 @@ start=`date +%s`
 if [ "$interval" != "" ]; then
 
 	perl $FILTER_VEP \
-	-i $VCF_IN -o $VCF_FILTERED \
+	-i ${VCF_IN} -o ${VCF_FILTERED} \
 	--filter "(FILTER = PASS) and (DP > 10) and (CHROM = $interval)" --force_overwrite 
 
 
 else
 
 	perl $FILTER_VEP \
-	-i $VCF_IN -o $VCF_FILTERED \
+	-i ${VCF_IN} -o ${VCF_FILTERED} \
 	--filter "(FILTER = PASS) and (DP > 10) and (CHROM in chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY)" --force_overwrite 
 
 fi
@@ -144,7 +144,7 @@ perl $VEP \
 --plugin CADD,${PLUGIN_DBS}/InDels.tsv.gz,${PLUGIN_DBS}/whole_genome_SNVs.tsv.gz \
 --custom ${MAF_FJD_COHORT},FJD_MAF,vcf,exact,0,AF,AN \
 --custom ${DENOVO_DB},denovoVariants,vcf,exact,0,SAMPLE_CT \
--i $VCF_FILTERED -o $VCF_ANNOTATED
+-i ${VCF_FILTERED} -o ${VCF_ANNOTATED}
 
 
 if [ "$?" = "0" ]; then

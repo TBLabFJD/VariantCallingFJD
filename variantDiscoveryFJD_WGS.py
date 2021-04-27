@@ -320,10 +320,10 @@ def main():
 				jobid_hc_list = []
 				jobid_annot_list = []
 
-				args.cvcf=True  # haplotype caller in GVCF mode
-				args.intervals=True # haplotype caller will be called by intervals
-				args.skipMapping == True
-
+				args.cvcf = True  # haplotype caller in GVCF mode
+				args.intervals = True # haplotype caller will be called by intervals
+				args.skipMapping = True
+				bamF = rgs.output+"/bams"
 
 				for element in intervals_files:
 
@@ -338,7 +338,8 @@ def main():
 					if not os.path.exists(output_interval):
 						os.makedirs(output_interval)
 
-					myargs = [args.input, output_interval, sample_name, str(args.memory), run, element, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local),  str(args.intervals),  str(removebam), "0", "WGS", softwarePath, interval_n]
+
+					myargs = [bamF, output_interval, sample_name, str(args.memory), run, element, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local),  str(args.intervals),  str(removebam), "0", "WGS", softwarePath, interval_n]
 					myargs_pipe = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh"]+myargs # Just calls to SNV processing and calling
 
 					jobid_hc=sbatch(job_name, args.output, ' '.join(myargs_pipe), time=args.time, mem=args.memory, threads=4, mail=args.mail, dep=jobid_pr) 

@@ -23,27 +23,29 @@ printf "MERGE CHR-BASED ANNOTATED VCFS  \n"
 printf ".................................\n"
 
 
-
-filestocombine=${MDAP}/snvs/${name}.list
-printf '%s\n' "${MDAP}/snvs/${name}"*".final.vcf" > $filestocombine
+# merge final files per chrosome
+filestocombine=${MDAP}/snvs/${name}.final.list
+printf '%s\n' "${MDAP}/snvs/${name}chr"*".final.vcf" > $filestocombine
 output=${MDAP}/snvs/${name}.final.vcf
 $tasksPath/mergeGVCF.sh $filestocombine $output $run $MDAP
-if [ "$?" != "0" ]  ; then exit 1; fi
+if [ "$?" != "0" ]  ; then exit 1; else rm "${MDAP}/snvs/${name}chr"*".final.vcf";  rm $filestocombine; fi
 
 
-filestocombine=${MDAP}/snvs/${name}.list
-printf '%s\n' "${MDAP}/snvs/${name}"*"annotated.vcf" > $filestocombine
-output=${MDAP}/snvs/${name}.annotated.vcf
-$tasksPath/mergeGVCF.sh $filestocombine $output $run $MDAP
-if [ "$?" != "0" ]  ; then exit 1; fi
+# merge annotated files per chromosome (not needed, we remove all chr-based annotated files)
+# filestocombine=${MDAP}/snvs/${name}.annotated.list
+# printf '%s\n' "${MDAP}/snvs/${name}chr"*".annotated.vcf" > $filestocombine
+# output=${MDAP}/snvs/${name}.annotated.vcf
+# $tasksPath/mergeGVCF.sh $filestocombine $output $run $MDAP
+# if [ "$?" != "0" ]  ; then exit 1; else rm "${MDAP}/snvs/${name}chr"*".annotated.vcf";  rm $filestocombine; fi
+if [ "$?" != "0" ]  ; then exit 1; else rm "${MDAP}/snvs/${name}.annotated.vcf"*;  fi
 
 
 
-filestocombine=${MDAP}/snvs/${name}.list
-printf '%s\n' "${MDAP}/snvs/${name}"*"annotated.MAFfiltered.vcf" > $filestocombine
+filestocombine=${MDAP}/snvs/${name}.annotated.MAFfiltered.list
+printf '%s\n' "${MDAP}/snvs/${name}chr"*".annotated.MAFfiltered.vcf" > $filestocombine
 output=${MDAP}/snvs/${name}.annotated.MAFfiltered.vcf
 $tasksPath/mergeGVCF.sh $filestocombine $output $run $MDAP
-if [ "$?" != "0" ]  ; then exit 1; fi
+if [ "$?" != "0" ]  ; then exit 1; else rm "${MDAP}/snvs/${name}chr"*".annotated.MAFfiltered.vcf"; rm $filestocombine; fi
 
 
 
@@ -64,7 +66,7 @@ outputtxt=${MDAP}/snvs/${name}.annotated.MAFfiltered.txt
 
 python $tasksPath/vep2tsv_woFreq.py $output \
 -o ${outputtxt} -t -g -f GT,AD,DP
-if [ "$?" != "0" ]  ; then exit 1; fi
+if [ "$?" != "0" ]  ; then exit 1; else rm $output; fi
 
 
 

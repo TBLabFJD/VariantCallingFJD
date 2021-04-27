@@ -7,7 +7,7 @@
 
 ### PIPELINE ARGUMENTS 
 
-INPUT=$1
+bamF=$1 # bam folder
 MDAP=$2
 sample=$3
 mem=$4
@@ -27,7 +27,7 @@ tasksPath=${softwarePath}/tasks
 
 # Definition of bam file 
 
-if [ "$skipmapping" != "True" ]; then bamF=$MDAP/bams; else bamF=${INPUT}; fi
+#if [ "$skipmapping" != "True" ]; then bamF=$MDAP/bams; else bamF=${INPUT}; fi
 bamfile=${bamF}/${sample}.bam
 
 
