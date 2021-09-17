@@ -19,6 +19,7 @@ genefilter=${10}
 single=${11}
 softwarePath=${12}
 tasksPath=${softwarePath}/tasks
+mafincorporation=${13}
 
 
 
@@ -88,113 +89,117 @@ fi
 
 
 
-# printf "\n.............................\n"
-# printf " POST-VEP ANNOTATIONS  \n"
-# printf ".............................\n"
+printf "\n.............................\n"
+printf " POST-VEP ANNOTATIONS  \n"
+printf ".............................\n"
 
 
-# printf '\nAnnotating extra features as Spanish Frequency and LOH...\n'
+printf '\nAnnotating extra features as Spanish Frequency and LOH...\n'
 
-# input=$output
-# output=${output%.*}.pvm.txt
-# python $tasksPath/PVM_Cluster.py ${input} -l $local -o ${output} -P "healthy"
+PLINK=$MDAP/plink
 
-# if [ "$?" = "0" ]; then
-# 	printf '\nEXIT STATUS: 0'
-# 	printf '\nPOST-VEP MODIFICATIONS for '${sample}' DONE'
-# 	rm $VCF_FINAL
+input=$output
+output=${output%.*}.pvm.txt
+python $tasksPath/PVM_Cluster.py ${input} -l $local -o ${output} -P "healthy" -k $PLINK/${name}.hom
 
-# else
-# 	printf "\nERROR: PROBLEMS WITH POST-VEP MODIFICATIONS"
-# 	exit 1
+if [ "$?" = "0" ]; then
+	printf '\nEXIT STATUS: 0'
+	printf '\nPOST-VEP MODIFICATIONS for '${sample}' DONE'
+	rm $VCF_FINAL
 
-# fi
+else
+ 	printf "\nERROR: PROBLEMS WITH POST-VEP MODIFICATIONS"
+ 	exit 1
 
-
-
-
-# printf "\n.............................\n"
-# printf " FILTER VCF BY GENE LIST \n"
-# printf ".............................\n"
-
-
-
-# # Filter PVM files based on gene list
-
-# if [ "$genefilter" != "False" ]; then
-
-# 	printf '\nFiltering VPM by gene list...\n'
-	
-# 	input=$output
-# 	output=${output%.*}.genelist.txt
-# 	python $tasksPath/filtering_geneList.py -i $input -f ${genefilter} -o $output
-# 	if [ "$?" = "0" ]; then
-# 		printf '\nEXIT STATUS: 0'
-# 		printf '\nVARIANT FILTERING BY GENE LIST for '${sample}' DONE'
-
-# 	else
-# 		printf "\nERROR: PROBLEMS WITH GENE FILTERING"
-# 		exit 1
-
-# 	fi
-
-# fi
-
+ fi
 
 
 
 
 printf "\n.............................\n"
-printf " MOVING FILES TO MAF FOLDER\n"
+printf " FILTER VCF BY GENE LIST \n"
 printf ".............................\n"
 
 
 
-# Moving vcf and coverage files to MAF folder
+# Filter PVM files based on gene list
+
+if [ "$genefilter" != "False" ]; then
+
+	printf '\nFiltering VPM by gene list...\n'
+	
+ 	input=$output
+ 	output=${output%.*}.genelist.txt
+ 	python $tasksPath/filtering_geneList.py -i $input -f ${genefilter} -o $output
+ 	if [ "$?" = "0" ]; then
+ 		printf '\nEXIT STATUS: 0'
+ 		printf '\nVARIANT FILTERING BY GENE LIST for '${sample}' DONE'
+
+ 	else
+ 		printf "\nERROR: PROBLEMS WITH GENE FILTERING"
+ 		exit 1
+
+ 	fi
+
+ fi
 
 
-printf '\nMoving files to MAF folder...\n'
-
-maf_coverage_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/coverage/new_bed/"
-maf_vcf_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/individual_vcf/new_vcf/"
 
 
-if [ "$cvcf" != "False" ]; then
+if [ "${mafincorporation}" != "False" ]; then
 
-	module load bcftools
 
-	vcf_cvcf="${MDAP}/snvs/${name}.final.vcf"
+	printf "\n.............................\n"
+	printf " MOVING FILES TO MAF FOLDER\n"
+	printf ".............................\n"
 
-	for sample in `bcftools query -l ${vcf_cvcf}`
-	do
 
-		vcf=${MDAP}/snvs/${sample}.final.vcf 
-		coverage="${MDAP}/qc/${sample}_padding.quantized.bed"
-		
+
+	# Moving vcf and coverage files to MAF folder
+
+
+	printf '\nMoving files to MAF folder...\n'
+
+	maf_coverage_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/coverage/new_bed/"
+	maf_vcf_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/individual_vcf/new_vcf/"
+
+
+	if [ "$cvcf" != "False" ]; then
+
+		module load bcftools
+
+		vcf_cvcf="${MDAP}/snvs/${name}.final.vcf"
+
+		for sample in `bcftools query -l ${vcf_cvcf}`
+		do
+
+			vcf=${MDAP}/snvs/${sample}.final.vcf 
+			coverage="${MDAP}/qc/${sample}_padding.quantized.bed"
+			
+			cp $vcf $maf_vcf_path
+			if [ "$?" != "0" ]  ; then exit 1; printf "\nERROR: PROBLEMS COPYING VCF FILE TO MAF"; fi
+
+			cp $coverage $maf_coverage_path
+			if [ "$?" != "0" ]  ; then exit 1; printf "\nERROR: PROBLEMS COPYING COVERAGE FILE TO MAF"; fi
+
+			if [ "$single" != "True" ]; then rm ${vcf}*; fi
+
+		done
+
+	else
+
+		vcf="${MDAP}/snvs/${name}.final.vcf"
+		coverage="${MDAP}/qc/${name}_padding.quantized.bed"
+
 		cp $vcf $maf_vcf_path
 		if [ "$?" != "0" ]  ; then exit 1; printf "\nERROR: PROBLEMS COPYING VCF FILE TO MAF"; fi
 
 		cp $coverage $maf_coverage_path
 		if [ "$?" != "0" ]  ; then exit 1; printf "\nERROR: PROBLEMS COPYING COVERAGE FILE TO MAF"; fi
 
-		if [ "$single" != "True" ]; then rm ${vcf}*; fi
-
-	done
-
-else
-
-	vcf="${MDAP}/snvs/${name}.final.vcf"
-	coverage="${MDAP}/qc/${name}_padding.quantized.bed"
-
-	cp $vcf $maf_vcf_path
-	if [ "$?" != "0" ]  ; then exit 1; printf "\nERROR: PROBLEMS COPYING VCF FILE TO MAF"; fi
-
-	cp $coverage $maf_coverage_path
-	if [ "$?" != "0" ]  ; then exit 1; printf "\nERROR: PROBLEMS COPYING COVERAGE FILE TO MAF"; fi
+	fi
 
 fi
-
-
 
 
 

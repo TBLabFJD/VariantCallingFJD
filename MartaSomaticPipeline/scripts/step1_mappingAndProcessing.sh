@@ -12,7 +12,7 @@ pipeline="/home/proyectos/bioinfo/fjd/VariantCallingFJD/pipelineFJD19.py"
 #samples="/home/proyectos/bioinfo/lodela/martaLymp/results_nextseq500_2/samples.txt"
 samples="/home/proyectos/bioinfo/lodela/BioinfoUnit/martaLymp/newResults_Nov19/nextseq_round4/samples.txt"
 
-python $pipeline -q -u martaLymp -i $project -o ${output} -s $samples -n Nextseq -a mapping -t 5 -M 2 -m ldelafuente.lorena@gmail.com
+python $pipeline -q -u martaLymp -i $project -o ${output} -s $samples -n Nextseq -a mapping -t 5 -M 2 -m martarodmo@gmail.com
 
 #python /home/proyectos/bioinfo/pipelineFJD2019v3/pipelineFJD19_bsNwait.py -i $project -o $output -a mapping -t 4 -b -u martaLymp
 

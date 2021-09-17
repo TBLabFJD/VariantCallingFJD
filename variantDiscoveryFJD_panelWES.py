@@ -76,7 +76,7 @@ def main():
 	parser.add_argument('-k', '--skipMapping', help='\t\tOption to skip mapping. Input folder must be fastq folder and Output folder the global output folder', action='store_true')
 	parser.add_argument('-g', '--genome', help='\t\tLocal directory for genome reference file', required=False)
 	parser.add_argument('-e', '--pedigree', help='\t\tPedigree file. Combined genotyping will be run automatically', required=False)
-	parser.add_argument('-v', '--version', help="Display program version number.", action='version', version='1.0')
+	parser.add_argument('-v', '--version', help="Display program version number.", action='version', version='2.0')
 	parser.add_argument('-P', '--pathology', help="Disease group name: resp, digest, skin, musc, gu, pregnancy, perinatal, cong_mal, clinic, infectious, other, neoplasm, blood, endoc, mental, CNS, eye, ear, circ,healthy.", default='healthy')
 	parser.add_argument('-I', '--intervals', help="Specified if genomic intervals (panel) over which to operate during SNV calling are used.", action='store_true')
 	parser.add_argument('-C', '--cnv-method', help="Method to call copy number variants (CNVs). Comma-separated list of methods. Methods: ED, CN, C2, PM.", required=False, default="ED,CN,C2,PM")
@@ -87,6 +87,8 @@ def main():
 	parser.add_argument('-u', '--basemountuser', help="Specify alternative basemount user", required=False, default=False)
 	parser.add_argument('-Q', '--qcnvthreshold', help='\t\tMinimum read coverage for 90percent of targets for CNV analysis.', required=False, default=40)
 	parser.add_argument('-q', '--queue', help='\t\tUse the fastqueue.', required=False, action="store_true")
+	parser.add_argument('-F', '--mafincorporation', help='\t\tIncorporate sample to the MAF FJD database.', required=False, action='store_true')
+	parser.add_argument('-x', '--sexchromosomes', help='\t\tAnalyce sex chromosomes (for CNVs).', required=False, action='store_true')
 
 
 
@@ -469,7 +471,7 @@ def main():
 					myargs_pipe1 = [pipelinesPath+"pipeline1_downloadMapping.sh", args.input, args.output, sample_name, str(args.threads), run, str(args.basespace), str(cat), inputDir,  args.genome, str(args.local), str(args.basemountuser), softwarePath]
 					myargs_pipe1_2 = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, str(args.duplicates), args.genome, str(args.memory)]
 					myargs_pipe2 = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh", bamF, args.output, sample_name, str(args.memory), run, args.panel, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.intervals), str(removebam),  str(args.padding), "WES", softwarePath]
-					myargs_pipe4 = [pipelinesPath+"pipeline4_LohAnnotationOutput.sh", args.output, sample_name, str(4), run, args.panel, str(args.cvcf), args.genome, str(args.local), args.pathology, str(args.genefilter), str(args.single), softwarePath]
+					myargs_pipe4 = [pipelinesPath+"pipeline4_LohAnnotationOutput.sh", args.output, sample_name, str(4), run, args.panel, str(args.cvcf), args.genome, str(args.local), args.pathology, str(args.genefilter), str(args.single), softwarePath, str(args.mafincorporation)]
 
 
 					start_time = time.time()
@@ -479,12 +481,12 @@ def main():
 					if "mapping" in sampleAnalysis: # SBATCH AND SAVE JOB IDS FOR MAPPING SAMPLES
 						
 						jobname_pipe1 =  "mapping"+"_"+sample_name
-						mapid=sbatch(jobname_pipe1, args.output, ' '.join(myargs_pipe1), time=args.time, threads=args.threads, mail=args.mail, dep='') # mmapping alone: just to take advantage of threads
+						mapid=sbatch(jobname_pipe1, args.output, ' '.join(myargs_pipe1), time=args.time, threads=args.threads, mail=args.mail, dep='', queue=args.queue) # mmapping alone: just to take advantage of threads
 						jobid_list_mapProc.append(mapid)
 						sys.stdout.write("JOB ID MAPPING: %s\n" %(mapid))
 
 						jobname_pipe2 =  "preprocessing_"+sample_name
-						procid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe1_2), time=args.time, threads=args.memory/4, mail=args.mail, dep=mapid) # bam processing + snp calling + snp filtering
+						procid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe1_2), time=args.time, threads=args.memory/4, mail=args.mail, dep=mapid, queue=args.queue) # bam processing + snp calling + snp filtering
 						jobid_list_mapProc.append(procid)
 						sys.stdout.write("JOB ID PRE-PROCESSING: %s\n" %(procid))
 
@@ -493,7 +495,7 @@ def main():
 
 
 						jobname_pipe2 =  "snv_"+sample_name
-						snpid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, threads=args.memory/4, mail=args.mail, dep=procid) # bam processing + snp calling + snp filtering
+						snpid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, threads=args.memory/4, mail=args.mail, dep=procid, queue=args.queue) # bam processing + snp calling + snp filtering
 						jobid_list_snpAnnot.append(snpid)
 						sys.stdout.write("JOB ID SNV CALLING: %s\n" %(snpid))
 
@@ -503,7 +505,7 @@ def main():
 							# Annotation ,  processing of output and moving of files for MAF
 
 							jobname_pipe4 =  "annotation_"+sample_name
-							annotid=sbatch(jobname_pipe4, args.output, ' '.join(myargs_pipe4), time=args.time, threads=args.memory/4, mail=args.mail, dep=snpid) # vcf annotation and complementary analysis to generate full output
+							annotid=sbatch(jobname_pipe4, args.output, ' '.join(myargs_pipe4), time=args.time, threads=args.memory/4, mail=args.mail, dep=snpid, queue=args.queue) # vcf annotation and complementary analysis to generate full output
 							jobid_list_snpAnnot.append(annotid)
 							sys.stdout.write("JOB ID SNV ANNOTATION: %s\n" %(annotid))
 
@@ -530,7 +532,7 @@ def main():
 		myargs_pipe3 = [pipelinesPath+"pipeline5_combinedGenotyping.sh", args.output, str(args.local), run, args.genome, str(args.cvcf), args.pedigree, softwarePath]
 		jobname_pipe3 =  "combinedGenotyping"+"_"+run
 		depJobs = ':'.join(jobid_list_snpAnnot)  	
-		combid=sbatch(jobname_pipe3, args.output, ' '.join(myargs_pipe3), time=args.time, mem=4, threads=1, mail=args.mail, dep=depJobs) # mmapping alone: just to take advantage of threads
+		combid=sbatch(jobname_pipe3, args.output, ' '.join(myargs_pipe3), time=args.time, mem=4, threads=1, mail=args.mail, dep=depJobs, queue=args.queue) # mmapping alone: just to take advantage of threads
 		cvcfjobs_list.append(combid)
 		sys.stdout.write("JOB ID COMBINED GENOTYPING: %s\n" %(combid))
 
@@ -540,7 +542,7 @@ def main():
 		
 		myargs_pipe4[2] = run
 		job_name="annotation_"+run
-		jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe4), time=args.time, mem=args.memory/4, threads=4, mail=args.mail, dep=combid) 
+		jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe4), time=args.time, mem=args.memory/4, threads=4, mail=args.mail, dep=combid, queue=args.queue) 
 		cvcfjobs_list.append(jobid)
 		sys.stdout.write("JOB ID SNV ANNOTATION: %s\n" %(jobid))
 
@@ -578,26 +580,26 @@ def main():
 		depJobs_list = jobid_list_mapProc
 
 		for method in method.split(","):
-			myargs_cnv = [pipelinesPath+"pipeline9_CNVcalling.sh", args.input, args.output, str(args.skipMapping),  ",".join(sample_namesT), run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method,   str(args.genefilter), str(args.genome), str(args.qcnvthreshold)]
+			myargs_cnv = [pipelinesPath+"pipeline9_CNVcalling.sh", args.input, args.output, str(args.skipMapping),  ",".join(sample_namesT), run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method,   str(args.genefilter), str(args.genome), str(args.qcnvthreshold), str(args.sexchromosomes)]
 			job_name = method+"_CNV_"+run
 
 			if method == "QC":
 				sys.stdout.write("\n\n#########  JOB FOR QUALITY CONTROL OF PANEL FILE AND SAMPLES \n")
 				depJobs = ':'.join(depJobs_list)
-				jobidQC=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
+				jobidQC=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any", queue=args.queue)
 				jobidQC_list.append(jobidQC)
 				sys.stdout.write("JOB ID: %s\n" %(jobidQC))
 				sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 			elif method == "MA":
 				sys.stdout.write("\n#########  COMBINING CNV RESULTS FROM ALTERNATIVE METHODS \n")
 				depJobs = ':'.join(vdepCVjobs_list+[jobidQC])
-				jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any")
+				jobidMA=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=depJobs, typedep="any", queue=args.queue)
 				vdepCVjobs_list.append(jobidMA)
 				sys.stdout.write("JOB ID: %s\n" %(jobidMA))
 				sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 			else:
 				sys.stdout.write("\n#########  CNV CALLING FOR %s\n" %(method))
-				jobidME=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=jobidQC)
+				jobidME=sbatch(job_name, args.output, ' '.join(myargs_cnv), time=args.time, mem=args.memory, threads=2, mail=args.mail, dep=jobidQC, queue=args.queue)
 				vdepCVjobs_list.append(jobidME)
 				sys.stdout.write("JOB ID: %s\n" %(jobidME))
 				sys.stdout.write("DEPENDENT JOBS: %s\n" %(jobidQC))
@@ -624,7 +626,7 @@ def main():
 	depJobs_list = jobid_list_mapProc + jobid_list_snpAnnot + jobidQC_list + vdepCVjobs_list + cvcfjobs_list
 	depJobs = ':'.join(depJobs_list)
 	job_name = "removeDirs_"+run
-	jobidREMOVE=sbatch(job_name, args.output, ' '.join(myargs_remove), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
+	jobidREMOVE=sbatch(job_name, args.output, ' '.join(myargs_remove), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any", queue=args.queue)
 	depJobs_list.append(jobidREMOVE)
 	sys.stdout.write("JOB ID: %s\n" %(jobidREMOVE))
 	sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
@@ -649,7 +651,7 @@ def main():
 
 	myargs_summary = [tasksPath+"checkproject.sh", args.output, depJobs, run]
 
-	jobidSUM=sbatch(job_name, args.output, ' '.join(myargs_summary), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any")
+	jobidSUM=sbatch(job_name, args.output, ' '.join(myargs_summary), time=args.time, mem=1, threads=1, mail=args.mail, dep=depJobs, typedep="any", queue=args.queue)
 	sys.stdout.write("JOB ID: %s\n" %(jobidSUM))
 	sys.stdout.write("DEPENDENT JOBS: %s\n" %(depJobs))
 

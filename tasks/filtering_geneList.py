@@ -24,7 +24,7 @@ def filtergenes(myargs):
 
 		for variant in variants:
 
-			if variant.strip().split("\t")[5] in geneList:
+			if variant.strip().split("\t")[11] in geneList:
 
 				output.write(variant)
 

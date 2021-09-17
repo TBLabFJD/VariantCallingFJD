@@ -172,6 +172,10 @@ tryCatch(
 
 total_data <- data.frame(lapply(total_data, function(x) if (is.factor(x)) as.character(x) else {x}), stringsAsFactors=FALSE)
 
+total_data$SAMPLE_NAME <- gsub("\\..*","", total_data$SAMPLE_NAME, perl = TRUE)
+total_data$SAMPLE_NAME <- gsub("_.*","", total_data$SAMPLE_NAME, perl = TRUE)
+
+
 #===================#
 #                   #
 #   #===========#   #
@@ -327,14 +331,16 @@ data_out2$PM_TARGETS <- sapply(data_out2$PM_TARGETS, function(x) interval.maker(
 total_samples <- unique(unlist(lapply(list.files(opt$dir, pattern = ".bam"), function(x) strsplit(x, split = ".", fixed = T)[[1]][1])))
 if(opt$samples!="all"){
   analyced_samples = intersect(total_samples, strsplit(opt$samples, split=",")[[1]])
-  data_out3 <- data.frame(stringsAsFactors = FALSE)
-  for (i in analyced_samples){
-    data_out_parcial <- data_out2[grepl(i,data_out2[,1]),]
-    if (nrow(data_out_parcial) >= 1){
-      data_out3 <- rbind(data_out3, data_out_parcial)
-    }
-  }
-  data_out2 <- data_out3
+  analyced_samples = gsub("_.*", "", analyced_samples)
+  data_out2 = data_out2[data_out2$SAMPLE %in% analyced_samples,]
+  # data_out3 <- data.frame(stringsAsFactors = FALSE)
+  # for (i in analyced_samples){
+  #   data_out_parcial <- data_out2[grepl(i,data_out2[,1]),]
+  #   if (nrow(data_out_parcial) >= 1){
+  #     data_out3 <- rbind(data_out3, data_out_parcial)
+  #   }
+  # }
+  # data_out2 <- data_out3
   mysamples = analyced_samples
 }else{mysamples = total_samples}
 

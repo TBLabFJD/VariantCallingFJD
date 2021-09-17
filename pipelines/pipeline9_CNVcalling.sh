@@ -22,7 +22,7 @@ methods=${11}
 genefilter=${12}
 genome=${13}
 mycountthreshold=${14}
-
+sexchr=${15}
 
 
 
@@ -95,7 +95,15 @@ if echo "$methods" | grep -q "QC"; then
 	# Sorting and removing small targets - bed file
 	printf "\n\nSorting and removing small targets in bed file..."
 	panel_10bp=${MDAP}/$(basename "$panel" .bed)_${run}_10bp.bed
-	awk '{if(($3-$2)>10 && $1!="chrX" && $1!="chrY" && $1!="Y" && $1!="X"){print $0}}' $panel | sort -V -k1,1 -k2,2 > $panel_10bp
+	
+	if [ "$sexchr" != "False" ]; then
+		awk '{if(($3-$2)>10 && ($1=="chrX" || $1=="X") ){print $0}}' $panel | sort -V -k1,1 -k2,2 > $panel_10bp
+		#awk '{if(($3-$2)>10 && ($1=="chrX" || $1=="chrY" || $1=="Y" || $1=="X") ){print $0}}' $panel | sort -V -k1,1 -k2,2 > $panel_10bp
+	else
+		awk '{if(($3-$2)>10 && $1!="chrX" && $1!="chrY" && $1!="Y" && $1!="X"){print $0}}' $panel | sort -V -k1,1 -k2,2 > $panel_10bp
+
+	fi
+
 	if [ "$?" = "1" ]  ; then echo "ERROR: Check targets in panel file."; exit 1;  else printf "\nDONE"; fi
 	
 

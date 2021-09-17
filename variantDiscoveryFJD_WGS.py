@@ -322,8 +322,8 @@ def main():
 
 				args.cvcf = True  # haplotype caller in GVCF mode
 				args.intervals = True # haplotype caller will be called by intervals
-				args.skipMapping = True
-				bamF = rgs.output+"/bams"
+				#args.skipMapping = True
+				bamF = args.output+"/bams"
 
 				for element in intervals_files:
 

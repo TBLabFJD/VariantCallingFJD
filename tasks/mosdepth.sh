@@ -113,7 +113,7 @@ if [ "$s1" = "0" ]  &&  [ "$s2" = "0" ]; then
 	printf '\nEXIT STATUS: 0'
 	printf '\nCOVERAGE QC for '${sample}' DONE\n' 
 	
-	rm ${QC}/${sample}_qc*
+	#rm ${QC}/${sample}_qc*
 
 	pass=$(awk 'BEGIN{if ('$cov'>'$covPerc') print 0}')
 

@@ -1,4 +1,4 @@
-"${VCF_IN}_annotated.tab""${VCF_IN}_annotated.tab"#!/bin/bash
+#"${VCF_IN}_annotated.tab""${VCF_IN}_annotated.tab"#!/bin/bash
 #SBATCH --account=bioinfo_serv
 #SBATCH --partition=bioinfo
 #SBATCH --job-name=vep   #job name
@@ -13,7 +13,7 @@
 ##SBATCH --initaldir=
 
 
-VCF_IN=$1
+VCF_IN="B19-303205_unfiltered.vcf"
 VCF_OUT="${VCF_IN}_annotated.tab"
 
 
