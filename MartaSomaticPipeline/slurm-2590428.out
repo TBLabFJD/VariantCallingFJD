@@ -1,0 +1,19 @@
+
+......................................................
+  MAPPING OR/AND SNV CALLING FOR SAMPLE  
+......................................................
+mkdir: cannot create directory ‘/home/proyectos/bioinfo/NOBACKUP/mrod/mutect2_20210623/tmp_’: File exists
+
+
+
+- VARIANT ANNOTATION (VEP - ENSEMBL) 
+---------------------------------------
+
+
+VEP annotation...[W::hts_idx_load2] The index file is older than the data file: /home/proyectos/bioinfo/references/VEPdbs/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz.tbi
+2021-07-28 13:51:58 - INFO: BAM-edited cache detected, enabling --use_transcript_ref; use --use_given_ref to override this
+
+
+VEP annotation and filtering DONE
+
+Executing time: 437
