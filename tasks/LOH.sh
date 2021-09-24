@@ -27,16 +27,22 @@ fasta=$6
 module load gatk/4.2.0
 module load bcftools
 module unload python/2.7.15
+source ../pipeline.config
 
-alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
-alias plink='/usr/local/bioinfo/plink/plink'
+alias gatk="java -jar ${gatkPath_path}"
+alias plink=${plink_bin}
+
+
+#alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
+#alias plink='/usr/local/bioinfo/plink/plink'
 
 softwareFile="${MDAP}/software_${run}.txt"
 title="LOH"
 
 if [ ! -f $softwareFile ] || ! grep -q $title $softwareFile  ; then
 	printf "LOH:\n" >> ${softwareFile}
-	/usr/local/bioinfo/plink/plink --version >> ${softwareFile}
+	module list 2>> ${softwareFile}
+	plink --version >> ${softwareFile}
 
 fi
 

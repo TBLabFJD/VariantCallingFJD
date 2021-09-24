@@ -29,32 +29,34 @@ sexchr=${15}
 # REQUIRED MODULES:
 
 
-if [ "$local" != "True" ]; then
+#if [ "$local" != "True" ]; then
 
-	module load bedtools/2.27.0
-	module load R/R
-	module load samtools
-	module load annotsv/2.2
-	module load perl
+module load bedtools/2.27.0
+module load R/R
+module load samtools
+module load annotsv/2.2
+module load perl
+source ../pipeline.config
 
-	fai="/home/proyectos/bioinfo/references/hg19/ucsc.hg19_convading.fasta.fai"
+fai=${fai_path}
+#fai="/home/proyectos/bioinfo/references/hg19/ucsc.hg19_convading.fasta.fai"
 
-	softwareFile="${MDAP}/software_${run}.txt"
-	echo "COPY NUMBER VARIANT CALLING:" >> ${softwareFile}
-	module list 2>> ${softwareFile}
+softwareFile="${MDAP}/software_${run}.txt"
+echo "COPY NUMBER VARIANT CALLING:" >> ${softwareFile}
+module list 2>> ${softwareFile}
 
-	export ANNOTSV="/usr/local/bioinfo/annotsv/2.2"
+# export ANNOTSV="/usr/local/bioinfo/annotsv/2.2"
 
-else
+# else
 
-	fai="/mnt/genetica3/marius/pipeline_practicas_marius/hg19bundle/ucsc.hg19_convading.fasta.fai"
+# 	fai="/mnt/genetica3/marius/pipeline_practicas_marius/hg19bundle/ucsc.hg19_convading.fasta.fai"
 
-	softwareFile="${MDAP}/software_${run}.txt"
-	echo "COPY NUMBER VARIANT CALLING:" >> ${softwareFile}
-	printf "\nVEP VERSION\n" >> ${softwareFile}
-	$VEP --help | grep "Versions:" -A 5 | tail -n4 >> ${softwareFile}
+# 	softwareFile="${MDAP}/software_${run}.txt"
+# 	echo "COPY NUMBER VARIANT CALLING:" >> ${softwareFile}
+# 	printf "\nVEP VERSION\n" >> ${softwareFile}
+# 	$VEP --help | grep "Versions:" -A 5 | tail -n4 >> ${softwareFile}
 
-fi
+# fi
 
 
 
@@ -338,7 +340,7 @@ if echo "$methods" | grep -q "MA"; then
 
 	printf '\n\nCNV annotation...\n'
 
-	$ANNOTSV/bin/AnnotSV/AnnotSV.tcl -SVinputFile  $CNV/${run}.combined.vcf -outputfile $CNV/${run}.combinedAnnotated.tsv
+	${annotsv_path} -SVinputFile  $CNV/${run}.combined.vcf -outputfile $CNV/${run}.combinedAnnotated.tsv
 
 	if [ "$?" = "0" ]; then
 		printf '\nEXIT STATUS: 0'

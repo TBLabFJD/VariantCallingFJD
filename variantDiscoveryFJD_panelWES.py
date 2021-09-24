@@ -16,6 +16,7 @@ from collections import Counter
 import datetime
 import time
 from collections import defaultdict 
+import ConfigParser
 
 now = (datetime.datetime.now()).strftime('%Y_%m_%d_%H_%M_%S')
 print("DATE:"+now)
@@ -23,6 +24,11 @@ softwarePath = os.path.dirname(os.path.realpath(__file__))+"/"
 pipelinesPath =  os.path.dirname(os.path.realpath(__file__))+"/pipelines/" 
 tasksPath =  os.path.dirname(os.path.realpath(__file__))+"/tasks/" 
 
+configFilePath = os.path.dirname(os.path.realpath(__file__))+"/pipeline.config"
+configFile = ConfigParser.ConfigParser()
+configFile.read(configFilePath)
+
+ 
 
 
 def sbatch(job_name, folder_out, command, mem=4, time=400, threads=1, mail=None, dep='', wait = '', queue=None, typedep=None):
@@ -47,7 +53,7 @@ def sbatch(job_name, folder_out, command, mem=4, time=400, threads=1, mail=None,
  		partition='--partition=bioinfo'
 
 
-	sbatch_command = "sbatch -J {} -o {}/{}.out -e {}/{}.err {} -t {}:00:00 --account=bioinfo_serv {} --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, partition, mem, threads, dep, wait, command)
+	sbatch_command = "sbatch -J {} -o {}/logfiles/{}.out -e {}/logfiles/{}.err {} -t {}:00:00 --account=bioinfo_serv {} --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, partition, mem, threads, dep, wait, command)
 	sbatch_response = subprocess.check_output(sbatch_command, shell=True)
 	job_id = sbatch_response.split(' ')[-1].strip()
 	return job_id
@@ -89,6 +95,7 @@ def main():
 	parser.add_argument('-q', '--queue', help='\t\tUse the fastqueue.', required=False, action="store_true")
 	parser.add_argument('-F', '--mafincorporation', help='\t\tIncorporate sample to the MAF FJD database.', required=False, action='store_true')
 	parser.add_argument('-x', '--sexchromosomes', help='\t\tAnalyce sex chromosomes (for CNVs).', required=False, action='store_true')
+	parser.add_argument('-A', '--annotation', help='\t\tVEP annotation (SNVs).', required=False, action='store_true')
 
 
 
@@ -144,6 +151,7 @@ def main():
 		sys.exit()
 	else:
 		args.output=os.path.realpath(args.output)
+		os.makedirs(args.output+"/logfiles")
 
 
 
@@ -180,10 +188,8 @@ def main():
 		else:
 			args.genome=os.path.realpath(args.genome)
 	else:
-		if args.local:
-			args.genome="/mnt/genetica3/marius/pipeline_practicas_marius/hg19bundle/ucsc.hg19.fasta"
-		else:
-			args.genome="/home/proyectos/bioinfo/references/hg19/ucsc.hg19.fasta"
+		args.genome=configFile.get("configFilePipeline","refGenome_path").strip('"').strip('\'')
+		# args.genome="/home/proyectos/bioinfo/references/hg19/ucsc.hg19.fasta"
 
 
 
@@ -346,7 +352,8 @@ def main():
 
 		# bs list projects
 
-		cmd="/home/proyectos/bioinfo/software/bs list project "+config+ " > "+ projectfile
+		cmd=configFile.get("configFilePipeline","baseSpace_bin").strip('"').strip('\'') + " list project " + config + " > "+ projectfile		
+		#cmd="/home/proyectos/bioinfo/software/bs list project "+config+ " > "+ projectfile
 		subprocess.call(cmd, shell=True)
 
 
@@ -359,7 +366,8 @@ def main():
 
 		### bs list dnaids (samples)
 
-		cmdSamples = " ".join(["/home/proyectos/bioinfo/software/bs",  "list", "biosample", "--sort-by=BioSampleName", config, projName,  stdoutFile])
+		cmdSamples = " ".join([configFile.get("configFilePipeline","baseSpace_bin").strip('"').strip('\''),  "list", "biosample", "--sort-by=BioSampleName", config, projName,  stdoutFile])
+		#cmdSamples = " ".join(["/home/proyectos/bioinfo/software/bs",  "list", "biosample", "--sort-by=BioSampleName", config, projName,  stdoutFile])
 		subprocess.call(cmdSamples, shell=True)
 
 
@@ -406,10 +414,11 @@ def main():
 
 
 	if args.basespace or cat:
-		if args.local:
-			inputDir = args.output + '/tmp_joinedFastq/'
-		else:	
+		if configFile.get("configFilePipeline","scratch_dir").strip('"').strip('\'') != "":
+			inputDir=configFile.get("configFilePipeline","scratch_dir").strip('"').strip('\'') + '/' + run + '/'
+		else
 			inputDir = '/scratch/' + os.environ["USER"] + '/' + run + '/'
+		
 		if not os.path.exists(inputDir):
 			os.makedirs(inputDir)
 	else: 
@@ -486,7 +495,7 @@ def main():
 						sys.stdout.write("JOB ID MAPPING: %s\n" %(mapid))
 
 						jobname_pipe2 =  "preprocessing_"+sample_name
-						procid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe1_2), time=args.time, threads=args.memory/4, mail=args.mail, dep=mapid, queue=args.queue) # bam processing + snp calling + snp filtering
+						procid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe1_2), time=args.time, threads=args.memory/4, mail=args.mail, dep=mapid, queue=args.queue) # bam processing
 						jobid_list_mapProc.append(procid)
 						sys.stdout.write("JOB ID PRE-PROCESSING: %s\n" %(procid))
 
@@ -495,12 +504,12 @@ def main():
 
 
 						jobname_pipe2 =  "snv_"+sample_name
-						snpid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, threads=args.memory/4, mail=args.mail, dep=procid, queue=args.queue) # bam processing + snp calling + snp filtering
+						snpid=sbatch(jobname_pipe2, args.output, ' '.join(myargs_pipe2), time=args.time, threads=args.memory/4, mail=args.mail, dep=procid, queue=args.queue) # snp calling + snp filtering
 						jobid_list_snpAnnot.append(snpid)
 						sys.stdout.write("JOB ID SNV CALLING: %s\n" %(snpid))
 
 
-						if not args.cvcf:
+						if not args.cvcf and args.annotation:
 
 							# Annotation ,  processing of output and moving of files for MAF
 
@@ -538,13 +547,14 @@ def main():
 
 
 
-		# Annotation ,  processing of output and moving of files for MAF
-		
-		myargs_pipe4[2] = run
-		job_name="annotation_"+run
-		jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe4), time=args.time, mem=args.memory/4, threads=4, mail=args.mail, dep=combid, queue=args.queue) 
-		cvcfjobs_list.append(jobid)
-		sys.stdout.write("JOB ID SNV ANNOTATION: %s\n" %(jobid))
+		if args.annotation:
+			# Annotation ,  processing of output and moving of files for MAF
+			
+			myargs_pipe4[2] = run
+			job_name="annotation_"+run
+			jobid=sbatch(job_name, args.output, ' '.join(myargs_pipe4), time=args.time, mem=args.memory, threads=args.memory/4, mail=args.mail, dep=combid, queue=args.queue) 
+			cvcfjobs_list.append(jobid)
+			sys.stdout.write("JOB ID SNV ANNOTATION: %s\n" %(jobid))
 
 
 

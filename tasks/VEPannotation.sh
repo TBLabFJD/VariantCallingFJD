@@ -31,7 +31,7 @@ VEP_CACHE='/usr/local/bioinfo/vep/ensembl-vep/t/testdata/cache/homo_sapiens/'
 VEP_FASTA="/home/proyectos/bioinfo/references/VEPfasta/Homo_sapiens.GRCh37.dna.primary_assembly.fa"
 PLUGIN_DIR=/usr/local/bioinfo/vep/ensembl-vep-release-103/Plugins
 PLUGIN_DBS="/home/proyectos/bioinfo/references/VEPdbs"
-dbNSFP_DB="${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz"
+#dbNSFP_DB="${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz"
 CCS_DB="/home/proyectos/bioinfo/references/CCS/ccrs.autosomes.v2.20180420.bed.gz"
 DENOVO_DB="/home/proyectos/bioinfo/references/denovodb/denovo-db.non-ssc-samples.variants.vcf.gz"
 MAF_FJD_COHORT="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/db/latest/MAFdb_AN20_latest.vcf.gz"
@@ -136,7 +136,7 @@ perl $VEP \
 --plugin dbscSNV,$PLUGIN_DBS/dbscSNV1.1_GRCh37.txt.gz \
 --plugin LoFtool,$PLUGIN_DIR/LoFtool_scores.txt \
 --plugin ExACpLI,$PLUGIN_DIR/ExACpLI_values.txt \
---plugin dbNSFP,${dbNSFP_DB},gnomAD_exomes_AF,gnomAD_exomes_NFE_AF,1000Gp3_AF,1000Gp3_EUR_AF,ExAC_AF,ExAC_EAS_AF,ExAC_NFE_AF,ExAC_Adj_AF,rs_dbSNP150,phyloP20way_mammalian,phyloP20way_mammalian_rankscore,phastCons20way_mammalian,phastCons20way_mammalian_rankscore,GERP++_RS,GERP++_RS_rankscore,LRT_pred,MutationTaster_pred,MutationAssessor_pred,FATHMM_pred,PROVEAN_pred,MetaLR_pred,MetaSVM_pred,M-CAP_pred,Interpro_domain,GTEx_V6p_gene,GTEx_V6p_tissue \
+--plugin dbNSFP,${PLUGIN_DBS}/dbNSFP3.5a_hg19.gz,gnomAD_exomes_AF,gnomAD_exomes_NFE_AF,1000Gp3_AF,1000Gp3_EUR_AF,ExAC_AF,ExAC_EAS_AF,ExAC_NFE_AF,ExAC_Adj_AF,rs_dbSNP150,phyloP20way_mammalian,phyloP20way_mammalian_rankscore,phastCons20way_mammalian,phastCons20way_mammalian_rankscore,GERP++_RS,GERP++_RS_rankscore,LRT_pred,MutationTaster_pred,MutationAssessor_pred,FATHMM_pred,PROVEAN_pred,MetaLR_pred,MetaSVM_pred,M-CAP_pred,Interpro_domain,GTEx_V6p_gene,GTEx_V6p_tissue \
 --plugin MaxEntScan,$PLUGIN_DBS/maxEntScan \
 --custom ${PLUGIN_DBS}/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz,gnomADg,vcf,exact,0,AF_NFE,AF_Male,AF_Female,Hom,POPMAX,AF_POPMAX \
 --custom ${PLUGIN_DBS}/Kaviar-160204-Public/vcfs/Kaviar-160204-Public-hg19.vcf.gz,kaviar,vcf,exact,0,AF,AC,AN \

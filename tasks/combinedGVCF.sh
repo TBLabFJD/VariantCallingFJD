@@ -29,8 +29,13 @@ module load picard/2.18.9
 module load gatk/4.2.0
 module load bedtools/2.27.0
 module load R
-alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
-alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
+source ../pipeline.config
+
+alias picard="java -jar ${picard_path}"
+alias gatk="java -jar ${gatkPath_path}"
+
+#alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
+#alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
 
 
 softwareFile="${MDAP}/software_${run}.txt"

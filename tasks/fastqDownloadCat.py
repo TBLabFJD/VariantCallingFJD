@@ -11,10 +11,11 @@ import subprocess
 import argparse
 import datetime
 import shutil
+import ConfigParser
 
 
 
-def joinFastq(basespaceF, fastqFolder, inputF, dnaid, user):
+def joinFastq(basespaceF, fastqFolder, inputF, dnaid, user, bscp):
 
 	
 	if basespaceF=="True":
@@ -34,7 +35,7 @@ def joinFastq(basespaceF, fastqFolder, inputF, dnaid, user):
 			config = user
 
 
-		cmd = "/home/proyectos/bioinfo/software/bs-cp -q -s //"+ config +"/Projects/"+inputF+"/Samples/"+dnaid2+" "+sampleFolder
+		cmd = bscp + " -q -s //"+ config +"/Projects/"+inputF+"/Samples/"+dnaid2+" "+sampleFolder
 
 		#sys.stderr.write(cmd)
 		proc = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
@@ -47,7 +48,7 @@ def joinFastq(basespaceF, fastqFolder, inputF, dnaid, user):
 			if "More than one matching identifier found for" in stderr:
 				id = stderr.split("\n")[1].split('(', 1)[1].split(')')[0]
 				sys.stderr.write("WARNING: Downloading sample '%s'\n" %(stderr.split("\n")[1].strip()))
-				cmd="/home/proyectos/bioinfo/software/bs-cp -q -s //"+ config +"/Projects/"+inputF+"/Samples/"+id+" "+sampleFolder
+				cmd= bscp + " -q -s //"+ config +"/Projects/"+inputF+"/Samples/"+id+" "+sampleFolder
 				exitcode = subprocess.call(cmd, shell=True)
 				if exitcode != 0:
 					sys.stderr.write("ERROR: 'Something was wrong when downloading sample %s from basespace'.\n" %(stderr.split("\n")[1]))
@@ -104,7 +105,12 @@ if __name__ == "__main__":
 	# 4. sample name
 	# 5. user
 
-	joinFastq(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+	configFilePath = os.path.dirname(os.path.realpath(__file__))+"/../pipeline.config"
+	configFile = ConfigParser.ConfigParser()
+	configFile.read(configFilePath)
+	bscp=configFile.get("configFilePipeline","baseSpacecp_bin").strip('"').strip('\'')
+
+	joinFastq(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], bscp)
 
 
 

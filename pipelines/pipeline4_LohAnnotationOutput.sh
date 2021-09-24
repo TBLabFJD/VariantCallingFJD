@@ -154,14 +154,19 @@ if [ "${mafincorporation}" != "False" ]; then
 	printf ".............................\n"
 
 
-
+	
 	# Moving vcf and coverage files to MAF folder
 
 
 	printf '\nMoving files to MAF folder...\n'
 
-	maf_coverage_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/coverage/new_bed/"
-	maf_vcf_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/individual_vcf/new_vcf/"
+	source ../pipeline.config
+
+	maf_coverage_path=${db_coverage_path}
+	maf_vcf_path=${db_vcf_path}
+
+	#maf_coverage_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/coverage/new_bed/"
+	#maf_vcf_path="/home/proyectos/bioinfo/fjd/MAF_FJD_v3.0/individual_vcf/new_vcf/"
 
 
 	if [ "$cvcf" != "False" ]; then

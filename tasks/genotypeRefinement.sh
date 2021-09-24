@@ -28,10 +28,14 @@ fasta=$5
 
 
 module load gatk/4.2.0
-eval "$(/usr/local/miniconda/python-3.6/bin/conda shell.bash hook)"
+source ../pipeline.config
+
+eval "$(${conda_bin} shell.bash hook)"
+
 source activate gatk
 
-alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
+alias gatk="java -jar ${gatkPath_path}"
+#alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
 
 
 softwareFile="${MDAP}/software_${run}.txt"

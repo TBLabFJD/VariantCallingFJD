@@ -31,11 +31,17 @@ INPUT=$9
 
 
 module load gatk/4.2.0
-eval "$(/usr/local/miniconda/python-3.6/bin/conda shell.bash hook)"
+source ../pipeline.config
+
+eval "$(${conda_bin} shell.bash hook)"
+
 source activate gatk
 
-alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
-CNN_REF=/home/proyectos/bioinfo/references/CNNgatk
+alias gatk="java -jar ${gatkPath_path}"
+
+
+#alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
+#CNN_REF=/home/proyectos/bioinfo/references/CNNgatk
 
 
 softwareFile="${MDAP}/software_${run}.txt"
@@ -119,8 +125,8 @@ if [ "$ftype" != "HF" ]; then
 
 	gatk FilterVariantTranches \
 	-V  $SNV/${name}_cnnScored.vcf \
-	--resource ${CNN_REF}/b37_hapmap_3.3.b37.mainchr.vcf.gz \
-	--resource ${CNN_REF}/b37_1000G_omni2.5.b37.mainchr.vcf.gz \
+	--resource ${cnn_hapmap_path} \
+	--resource ${cnn_1000G_path} \
 	--info-key CNN_2D \
 	--snp-tranche 99.95 \
 	--indel-tranche 99.4 \

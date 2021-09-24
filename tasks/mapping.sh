@@ -30,8 +30,10 @@ threads=$7
 module load bwa/0.7.17
 module load gatk/4.2.0 
 module load samtools/1.9
-alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
-alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
+source ../pipeline.config
+
+alias picard="java -jar ${picard_path}"
+alias gatk="java -jar ${gatkPath_path}"
 
 
 softwareFile="${MDAP}/software_${run}.txt"

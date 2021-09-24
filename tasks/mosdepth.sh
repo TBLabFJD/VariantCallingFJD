@@ -35,7 +35,8 @@ title="COVERAGE QC"
 if [ ! -f $softwareFile ] || ! grep -q $title $softwareFile  ; then
 
 	printf "COVERAGE QC:\n" >> ${softwareFile}
-	/usr/local/bioinfo/plink/plink --version >> ${softwareFile}
+	module list 2>> ${softwareFile}	
+	mosdepth --version >> ${softwareFile}
 
 fi
 
