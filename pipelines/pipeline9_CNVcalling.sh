@@ -33,9 +33,9 @@ sexchr=${15}
 
 module load bedtools/2.27.0
 module load R/R
-module load samtools
+module load samtools/1.9
 module load annotsv/2.2
-module load perl
+module load perl/5.28.0
 source ../pipeline.config
 
 fai=${fai_path}

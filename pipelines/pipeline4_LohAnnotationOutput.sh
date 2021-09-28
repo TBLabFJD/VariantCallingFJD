@@ -171,7 +171,7 @@ if [ "${mafincorporation}" != "False" ]; then
 
 	if [ "$cvcf" != "False" ]; then
 
-		module load bcftools
+		module load bcftools/1.3
 
 		vcf_cvcf="${MDAP}/snvs/${name}.final.vcf"
 

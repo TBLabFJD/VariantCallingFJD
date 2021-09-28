@@ -27,7 +27,7 @@ mycountthreshold=$9
 
 		
 module load miniconda/3.6
-module load bedtools
+module load bedtools/2.27.0
 
 softwareFile="${MDAP}/software_${run}.txt"
 title="COVERAGE QC"

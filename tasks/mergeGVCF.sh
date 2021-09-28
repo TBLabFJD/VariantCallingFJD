@@ -29,7 +29,7 @@ module load samtools/1.9
 module load picard/2.18.9
 module load gatk/4.2.0
 module load bedtools/2.27.0
-module load R
+module load R/R
 alias picard='java -jar /usr/local/bioinfo/picard-tools/2.18.9/picard.jar'
 alias gatk='java -jar /usr/local/bioinfo/gatk/4.2.0/gatk-package-4.2.0.0-local.jar'	
 

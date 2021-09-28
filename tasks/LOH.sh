@@ -25,7 +25,7 @@ fasta=$6
 
 		
 module load gatk/4.2.0
-module load bcftools
+module load bcftools/1.3
 module unload python/2.7.15
 source ../pipeline.config
 
