@@ -50,10 +50,10 @@ def sbatch(job_name, folder_out, command, mem=4, time=400, threads=1, mail=None,
 	if queue==True:
  		partition='--partition=fastbioinfo'
  	else:
- 		partition='--partition=bioinfo'
+ 		partition="--partition=" + sbatch_partition
 
 
-	sbatch_command = "sbatch -J {} -o {}/logfiles/{}.out -e {}/logfiles/{}.err {} -t {}:00:00 --account=bioinfo_serv {} --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, partition, mem, threads, dep, wait, command)
+	sbatch_command = "sbatch -J {} -o {}/logfiles/{}.out -e {}/logfiles/{}.err {} -t {}:00:00 --account={} {} --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, sbatch_account, partition, mem, threads, dep, wait, command)
 	sbatch_response = subprocess.check_output(sbatch_command, shell=True)
 	job_id = sbatch_response.split(' ')[-1].strip()
 	return job_id
