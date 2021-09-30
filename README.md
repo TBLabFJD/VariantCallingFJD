@@ -5,6 +5,10 @@ The objective of the development of this pipeline was to automate the customized
 
 This pipeline has been developed by [**Translational Bioinformatics Lab**](https://www.translationalbioinformaticslab.es/tblab-home-page) at the [**IIS-FJD**](https://www.fjd.es/iis-fjd). 
 
+[![Workflow](https://github.com/TBLabFJD/VariantCallingFJD/blob/master/Workflow.png)](https://github.com/TBLabFJD/VariantCallingFJD)
+
+
+
 ## License
 VariantCallingFJD source code is provided under the [**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**](https://creativecommons.org/licenses/by-nc-sa/4.0/). VariantCallingFJD includes several third party packages provided under other open source licenses, please see COPYRIGHT.txt for additional details.
 
