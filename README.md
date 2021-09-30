@@ -10,7 +10,7 @@ This pipeline has been developed by [**Translational Bioinformatics Lab**](https
 
 
 ## License
-VariantCallingFJD source code is provided under the [**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**](https://creativecommons.org/licenses/by-nc-sa/4.0/). VariantCallingFJD includes several third party packages provided under other open source licenses, please see COPYRIGHT.txt for additional details.
+VariantCallingFJD source code is provided under the [**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**](https://creativecommons.org/licenses/by-nc-sa/4.0/). VariantCallingFJD includes several third party packages provided under other open source licenses, please check them for additional details.
 
 
 [![Licencia de Creative Commons](https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
@@ -145,3 +145,32 @@ bed_path="path_to_bed_file"
 python ${pipeline} -i ${input_path} -o ${output_path} -p ${bed_path} -a all -A
 ```
  
+
+ ## Output
+The output looks like:
+ - **bams** - directoy containing the mapped samples
+ - **cnvs** - directory containing CNV calling and annotation results
+   -  **CODEX2** - directory containing CODEX2 CNV calling results
+   -  **CoNVaDING** - directory containing CoNVaDING CNV calling results
+   -  **ExomeDepth** - directory containing ExomeDepth CNV calling results
+   -  **Panelcn.MOPS** - directory containing Panelcn.MOPS CNV calling results
+   -  *run_name.combinedAnnotated.tsv* - file containing the annotated CNVs
+   -  *run_name.combined.txt* - file containing the combined results of the 4 CNV calling algorithms (in TSV format)
+   -  *run_name.combined.vcf* - file containing the combined results of the 4 CNV calling algorithms (in VCF format)
+   -  *run_name.extended.bed* - modified bed file use by the CNV calling algorithms
+   -  *run_name.final.txt* - file containing the final report with the annotated CNVs
+   -  *run_name.final.genelist.txt* - file containing the final report with the annotated CNVs filtered by the provided gene list
+ - **genotyping** - directory containing temporal information about the variant calling
+ - **logfiles** - directory containing the .err and .out logfiles of all jobs
+ - **plink** - directory containing PLINKS's output with information about homozygosity
+ - **qc** - directory containing quality (coverage) information of the for SNV and CNV calling  
+ - **snvs** - directory containing SNV and INDEL calling and annotation results
+   - *sample_name.annotated.MAFfiltered.pvm.txt* - file containing the final report with the PASS annotated SNVs and INDELs filtered by minor allele frequency (in TSV format)
+   - *sample_name.annotated.MAFfiltered.txt* - file containing the PASS annotated SNVs and INDELs  filtered by minor allele frequency (in TSV format) 
+   - *sample_name.annotated.MAFfiltered.vcf* - vcf containing the PASS annotated SNVs and INDELs filtered by minor allele frequency (in VCF format)
+   - *sample_name.annotated.vcf* - vcf containing the PASS annotated SNVs and INDELs (in VCF format)
+   - *sample_name.final.vcf* - file containing PASS SNVs and INDELs  (in VCF format)
+   - *sample_name.gatkLabeled.vcf* - vcf containing the SNV and INDEL (in VCF format)
+   - *sample_name.gatkLabeled.vcf.idx* - index of the *sample_name.annotated.gatkLabeled.vcf* file
+ - *software_run_name.txt* - file containing the software use in each section of the analysis
+ - *sophia_clinical_exome_ces_annotated_run_name_10bp.bed* - filtered bedfile used in the pipeline
