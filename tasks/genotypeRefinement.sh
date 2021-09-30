@@ -16,7 +16,7 @@ run=$2
 MDAP=$3
 ped=$4
 fasta=$5
-
+softwarePath=$6
 
 
 
@@ -28,7 +28,7 @@ fasta=$5
 
 
 module load gatk/4.2.0
-source ../pipeline.config
+source ${softwarePath}/pipeline.config
 
 eval "$(${conda_bin} shell.bash hook)"
 

@@ -21,7 +21,7 @@ sample=$4
 duplicates=$5
 REF=$6
 mem=$7
-
+softwarePath=$8
 
 
 #####################
@@ -35,7 +35,7 @@ module load picard/2.18.9
 module load gatk/4.2.0
 module load bedtools/2.27.0
 module load R/R
-source ../pipeline.config
+source ${softwarePath}/pipeline.config
 
 alias picard="java -jar -Xmx${mem}g ${picard_path}"
 alias gatk="java -jar -Xmx${mem}g ${gatkPath_path}"

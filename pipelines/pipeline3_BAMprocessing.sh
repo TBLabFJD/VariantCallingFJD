@@ -92,7 +92,7 @@ printf ".............................\n"
 ftype="HF"
 #ftype="CNN"
 
-$tasksPath/SNVfiltering.sh $local $run $MDAP $sample $REF $ftype $cvcf
+$tasksPath/SNVfiltering.sh $local $run $MDAP $sample $REF $ftype $cvcf $softwarePath
 
 
 

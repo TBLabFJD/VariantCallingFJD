@@ -13,7 +13,7 @@ VariantCallingFJD source code is provided under the [**Creative Commons Attribut
 
 ## Dependencies
 **Job scheduler:**
-- **Slurm Workload Manager:** As said in the introduction, this pipeline has been developped to be run in a Slurm Workload Manager system. We use the the function `sbatch` to submit the jobs to the queue. We also have installed the diferent programs in different modules to prevent incompatibilities.
+- **Slurm Workload Manager:** This pipeline has been developped to be run in a Slurm Workload Manager system. We use the the function `sbatch` to submit the jobs to the queue. We also have installed the diferent programs in different modules to prevent incompatibilities.
 
 **Programming languages:**
 - **Python v2.7.15:** All python scrips were developped using python v2.7.15. In task `"Mosdepth.sh"` python v3.6.12 is used by loading the module miniconda/3.6 to use `mosdepth`.
@@ -33,7 +33,7 @@ VariantCallingFJD source code is provided under the [**Creative Commons Attribut
 - **BaseSpaceCLI v1.0.0**
 - **bscp v0.6.1.337**
 
-**R libraries:**
+**R libraries:** (these versions are the ones tested)
 - **dplyr v0.8.3**
 - **optparser v1.6.6**
 - **stringr v1.4.0**
@@ -45,27 +45,29 @@ VariantCallingFJD source code is provided under the [**Creative Commons Attribut
 
 
 **Python libraries**
-- **csv v1.0**
-- **argparse v1.1**
+- **csv**
+- **argparse**
 - **os**
 - **subprocess**
 - **sys**
-- **re v2.2.1**
+- **re**
 - **glob**
-- **numpy v1.16.6**
-- **pandas v0.24.2**
+- **numpy**
+- **pandas**
 - **datetime**
 - **shutil**
 - **ConfigParser**
 - **string**
-- **json v2.0.9**
+- **json**
 - **itertools**
 - **operator**
 - **collections**
 - **time**
 
+
 ## Instalation
 1. Install all the dependencies.
+
     1.1. We recommend installing all the above bioinformatics programs and programming languages in modules as follow:
     - Python v2.7.15 --> python/2.7.15
     - Perl v5.28.0 --> perl/5.28.0
@@ -81,12 +83,13 @@ VariantCallingFJD source code is provided under the [**Creative Commons Attribut
     - vep release 103 --> vep/release103
     
     1.2. Install all Python and R packages
+
     1.3 Download the following binaries and executables
-    - The BaseSpace Sequence Hub CLI tool suite binary
-    - BaseSpace-copy binary
+    - The BaseSpace Sequence Hub CLI tool suite binary (optional)
+    - BaseSpace-copy binary (optional)
     - GATK executable jar file
     - Picard executable jar file
-    - PLINK binary
+    - PLINK binary (optional)
 
 2. Clone this repository using:
 ```sh
@@ -123,7 +126,9 @@ BaseSpace_Sequence_Hub_CLI_tool_suite_binary_path/bs authenticate
      - conda binary (same binary as the une installed for the miniconda)
      - PLINK binary
      - ANNOTSV executable (.tcl)
+ 
  2. Run the pipeline as follow
+ 
  ```sh
 module load python/2.7.15
 module load perl/5.28.0
@@ -133,6 +138,6 @@ input_path="input_directory_with_fastq_files"
 output_path="output_directory"
 bed_path="path_to_bed_file"
 
-python ${pipeline} -i ${input_path} -o ${output_path} -p ${bed_path} -a all -A -t 20 -M 20 -P healthy
+python ${pipeline} -i ${input_path} -o ${output_path} -p ${bed_path} -a all -A
 ```
  

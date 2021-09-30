@@ -18,8 +18,9 @@ name=$4 # sample name or run name
 REF=$5
 ftype=$6 # when multi VCF is used only "HF" can be used
 cvcf=$7
-skipmapping=$8    
-INPUT=$9
+softwarePath=$8
+#skipmapping=$9    
+#INPUT=${10}
 
 
 
@@ -31,7 +32,7 @@ INPUT=$9
 
 
 module load gatk/4.2.0
-source ../pipeline.config
+source $softwarePath/pipeline.config
 
 eval "$(${conda_bin} shell.bash hook)"
 

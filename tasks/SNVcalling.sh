@@ -24,7 +24,7 @@ padding=$9
 cvcf=${10}
 removebam=${11}
 mem=${12}
-
+softwarePath=${13}
 
 #####################
 ## MODULES AND DBs ##
@@ -36,7 +36,7 @@ module load picard/2.18.9
 module load gatk/4.2.0
 module load bedtools/2.27.0
 module load R/R
-source ../pipeline.config
+source ${softwarePath}/pipeline.config
 
 alias picard="java -jar -Xmx${mem}g ${picard_path}"
 alias gatk="java -jar -Xmx${mem}g ${gatkPath_path}"

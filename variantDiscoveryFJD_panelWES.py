@@ -50,8 +50,9 @@ def sbatch(job_name, folder_out, command, mem=4, time=400, threads=1, mail=None,
 	if queue==True:
  		partition='--partition=fastbioinfo'
  	else:
- 		partition="--partition=" + sbatch_partition
+ 		partition="--partition=" + configFile.get("configFilePipeline","sbatch_partition").strip('"').strip('\'')
 
+ 	sbatch_account = configFile.get("configFilePipeline","sbatch_account").strip('"').strip('\'')
 
 	sbatch_command = "sbatch -J {} -o {}/logfiles/{}.out -e {}/logfiles/{}.err {} -t {}:00:00 --account={} {} --mem-per-cpu={}gb --cpus-per-task={} {} {} {}".format(job_name, folder_out, job_name, folder_out, job_name, mailc, time, sbatch_account, partition, mem, threads, dep, wait, command)
 	sbatch_response = subprocess.check_output(sbatch_command, shell=True)
@@ -73,7 +74,7 @@ def main():
 	parser.add_argument('-p', '--panel', help='\t\tBed with panel regions. Mandatory if CNV analysis', required=False)
 	parser.add_argument('-b', '--basespace', help='\t\tTake samples from Basespace', required=False, action='store_true')
 	parser.add_argument('-l', '--local', help='\t\tRun in local', required=False, action='store_true')
-	parser.add_argument('-t', '--threads', help='\t\tNumber of threads for mapping', type=int, required=False, default=1)
+	parser.add_argument('-t', '--threads', help='\t\tNumber of threads for mapping', type=int, required=False, default=4)
 	parser.add_argument('-M', '--memory', help='\t\tNumber of GBs for Java GATK and VEP running - Total GBs', type=int, required=False, default=20)
 	parser.add_argument('-f', '--genefilter', help='\t\tGene list to filter SNVs', required=False, default=False)
 	parser.add_argument('-T', '--time', help='\t\tNumber of hours', type=int, required=False, default=1000)
@@ -104,6 +105,9 @@ def main():
 	fjd_start_time = time.time()
 	args = parser.parse_args()
 
+	## minimum memory 4GB
+	if args.memory < 4:
+		args.memory = 4
 
 
 	## basespace option not possible for bam files
@@ -151,7 +155,8 @@ def main():
 		sys.exit()
 	else:
 		args.output=os.path.realpath(args.output)
-		os.makedirs(args.output+"/logfiles")
+		if not os.path.exists(args.output+"/logfiles"):
+			os.makedirs(args.output+"/logfiles")
 
 
 
@@ -416,7 +421,7 @@ def main():
 	if args.basespace or cat:
 		if configFile.get("configFilePipeline","scratch_dir").strip('"').strip('\'') != "":
 			inputDir=configFile.get("configFilePipeline","scratch_dir").strip('"').strip('\'') + '/' + run + '/'
-		else
+		else:
 			inputDir = '/scratch/' + os.environ["USER"] + '/' + run + '/'
 		
 		if not os.path.exists(inputDir):
@@ -478,7 +483,7 @@ def main():
 					
 
 					myargs_pipe1 = [pipelinesPath+"pipeline1_downloadMapping.sh", args.input, args.output, sample_name, str(args.threads), run, str(args.basespace), str(cat), inputDir,  args.genome, str(args.local), str(args.basemountuser), softwarePath]
-					myargs_pipe1_2 = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, str(args.duplicates), args.genome, str(args.memory)]
+					myargs_pipe1_2 = [tasksPath+"BAMpreprocessing.sh",  str(args.local), run, args.output, sample_name, str(args.duplicates), args.genome, str(args.memory), softwarePath]
 					myargs_pipe2 = [pipelinesPath+"pipeline2_QCbamSNVCallingFiltering.sh", bamF, args.output, sample_name, str(args.memory), run, args.panel, str(args.cvcf), str(args.skipMapping), args.genome, str(args.local), str(args.intervals), str(removebam),  str(args.padding), "WES", softwarePath]
 					myargs_pipe4 = [pipelinesPath+"pipeline4_LohAnnotationOutput.sh", args.output, sample_name, str(4), run, args.panel, str(args.cvcf), args.genome, str(args.local), args.pathology, str(args.genefilter), str(args.single), softwarePath, str(args.mafincorporation)]
 
@@ -590,7 +595,7 @@ def main():
 		depJobs_list = jobid_list_mapProc
 
 		for method in method.split(","):
-			myargs_cnv = [pipelinesPath+"pipeline9_CNVcalling.sh", args.input, args.output, str(args.skipMapping),  ",".join(sample_namesT), run, str(args.threads), args.panel, str(args.window), tasksPath, str(args.local), method,   str(args.genefilter), str(args.genome), str(args.qcnvthreshold), str(args.sexchromosomes)]
+			myargs_cnv = [pipelinesPath+"pipeline9_CNVcalling.sh", args.input, args.output, str(args.skipMapping),  ",".join(sample_namesT), run, str(args.threads), args.panel, str(args.window), softwarePath, str(args.local), method,   str(args.genefilter), str(args.genome), str(args.qcnvthreshold), str(args.sexchromosomes)]
 			job_name = method+"_CNV_"+run
 
 			if method == "QC":

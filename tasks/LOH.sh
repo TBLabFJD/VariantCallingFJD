@@ -15,7 +15,7 @@ MDAP=$3
 name=$4
 cvcf=$5
 fasta=$6
-
+softwarePath=$7
 
 
 #####################
@@ -27,7 +27,7 @@ fasta=$6
 module load gatk/4.2.0
 module load bcftools/1.3
 module unload python/2.7.15
-source ../pipeline.config
+source ${softwarePath}/pipeline.config
 
 alias gatk="java -jar ${gatkPath_path}"
 alias plink=${plink_bin}

@@ -19,7 +19,7 @@ forward=$4
 reverse=$5
 ref=$6
 threads=$7
-
+softwarePath=$8
 
 #####################
 ## MODULES AND DBs ##
@@ -30,7 +30,7 @@ threads=$7
 module load bwa/0.7.17
 module load gatk/4.2.0 
 module load samtools/1.9
-source ../pipeline.config
+source ${softwarePath}/pipeline.config
 
 alias picard="java -jar ${picard_path}"
 alias gatk="java -jar ${gatkPath_path}"
@@ -111,7 +111,7 @@ printf "\n- FASTQ to uBWA "
 start=`date +%s`
 
 
-gatk FastqToSam -TMP_DIR $TMP \
+gatk FastqToSam --TMP_DIR $TMP \
 --FASTQ ${forward} \
 --FASTQ2 ${reverse} \
 --OUTPUT $AF/${sample}.unmapped.bam \
@@ -154,7 +154,7 @@ printf "\n- Merge uBAM and generate BWA-aligned BAM "
 
 start=`date +%s`
 
-gatk MergeBamAlignment -TMP_DIR $TMP \
+gatk MergeBamAlignment --TMP_DIR $TMP \
   --VALIDATION_STRINGENCY SILENT \
   --EXPECTED_ORIENTATIONS FR \
   --ATTRIBUTES_TO_RETAIN X0 \

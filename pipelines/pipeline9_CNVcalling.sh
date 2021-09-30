@@ -16,13 +16,15 @@ run=$5
 threads=$6
 panel=$7
 window=$8
-tasksPath=$9
+softwarePath=$9
 local=${10}
 methods=${11}
 genefilter=${12}
 genome=${13}
 mycountthreshold=${14}
 sexchr=${15}
+tasksPath=${softwarePath}/tasks
+
 
 
 
@@ -36,7 +38,7 @@ module load R/R
 module load samtools/1.9
 module load annotsv/2.2
 module load perl/5.28.0
-source ../pipeline.config
+source ${softwarePath}/pipeline.config
 
 fai=${fai_path}
 #fai="/home/proyectos/bioinfo/references/hg19/ucsc.hg19_convading.fasta.fai"
@@ -44,7 +46,7 @@ fai=${fai_path}
 softwareFile="${MDAP}/software_${run}.txt"
 echo "COPY NUMBER VARIANT CALLING:" >> ${softwareFile}
 module list 2>> ${softwareFile}
-
+export ANNOTSV=${annotsv_path}
 # export ANNOTSV="/usr/local/bioinfo/annotsv/2.2"
 
 # else
@@ -340,7 +342,7 @@ if echo "$methods" | grep -q "MA"; then
 
 	printf '\n\nCNV annotation...\n'
 
-	${annotsv_path} -SVinputFile  $CNV/${run}.combined.vcf -outputfile $CNV/${run}.combinedAnnotated.tsv
+	${annotsv_path}/bin/AnnotSV/AnnotSV.tcl -SVinputFile  $CNV/${run}.combined.vcf -outputfile $CNV/${run}.combinedAnnotated.tsv
 
 	if [ "$?" = "0" ]; then
 		printf '\nEXIT STATUS: 0'

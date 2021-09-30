@@ -56,7 +56,7 @@ printf "SNV CALLING $sample \n"
 printf ".........................\n"
 
 
-$tasksPath/SNVcalling.sh $local $run $MDAP $sample $REF $bamfile $intervals $panel $padding $cvcf $removebam $mem
+$tasksPath/SNVcalling.sh $local $run $MDAP $sample $REF $bamfile $intervals $panel $padding $cvcf $removebam $mem $softwarePath
 s1="$?"
 if [ "$s1" != "0" ]  ; then exit 1; fi
 
@@ -82,7 +82,7 @@ printf ".............................\n"
 ftype="HF"
 #ftype="CNN"
 
-$tasksPath/SNVfiltering.sh $local $run $MDAP $sample $REF $ftype $cvcf
+$tasksPath/SNVfiltering.sh $local $run $MDAP $sample $REF $ftype $cvcf $softwarePath
 s1="$?"
 if [ "$s1" != "0" ]  ; then exit 1; fi
 

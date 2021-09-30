@@ -62,7 +62,7 @@ printf "........................\n"
 ftype="HF"
 #ftype="CNN"
 
-$tasksPath/SNVfiltering.sh $local $run $MDAP $name $REF $ftype $cvcf
+$tasksPath/SNVfiltering.sh $local $run $MDAP $name $REF $ftype $cvcf $softwarePath
 if [ "$?" != "0" ]  ; then exit 1; fi
 
 

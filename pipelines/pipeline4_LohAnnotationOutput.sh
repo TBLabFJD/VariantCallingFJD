@@ -49,7 +49,7 @@ printf "\n...............\n"
 printf "  LOH \n"
 printf ".................\n"
 
-$tasksPath/LOH.sh $local $run $MDAP $name $cvcf $REF
+$tasksPath/LOH.sh $local $run $MDAP $name $cvcf $REF $softwarePath
 
 
 if [ "$?" = "0"  ]; then
