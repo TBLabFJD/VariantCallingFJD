@@ -69,6 +69,40 @@ bedFile_data$CHR <- gsub("chr", "", bedFile_data$CHR)
 #bedFile_data <- bedFile_data[!grepl("^.*_SNP$",bedFile_data$GENE_NAME),] # Delete SNP rows
 
 
+# bedFile_data <- bedFile_data[order(bedFile_data$CHR, bedFile_data$START, decreasing = T),]
+# zero_rows = which(bedFile_data$GENE_NAME == "0")
+# 
+# for (i in zero_rows){
+# 
+#   if ( i == 1 ){ # If it is the first
+#     if ( bedFile_data[i+1, 4] != "0" ) { bedFile_data[i, 4] = bedFile_data[i+1, 4] }
+#     else { bedFile_data[i, 4] = paste(bedFile_data[i, 1], bedFile_data[i, 2], sep = "_") }
+#   }
+#   else if (i == nrow(bedFile_data)) { # If it is the last
+#     if ( bedFile_data[i-1, 4] != "0" ) { bedFile_data[i, 4] = bedFile_data[i-1, 4] }
+#     else { bedFile_data[i, 4] = paste(bedFile_data[i, 1], bedFile_data[i, 2], sep = "_") }
+#   }
+#   else { # Beginning
+#     if (bedFile_data[i, 1] != bedFile_data[i-1, 1]){
+#       if (bedFile_data[i+1, 4] != "0") { bedFile_data[i, 4] = bedFile_data[i+1, 4] }
+#       #else { bedFile_data[i, 4] = paste(bedFile_data[i, 1], bedFile_data[i, 2], sep = "_") }
+#     }
+#     else if (bedFile_data[i, 1] != bedFile_data[i+1, 1]){
+#       if (bedFile_data[i-1, 4] != "0") { bedFile_data[i, 4] = bedFile_data[i-1, 4] }
+#       #else { bedFile_data[i, 4] = paste(bedFile_data[i, 1], bedFile_data[i, 2], sep = "_") }
+#     }
+#     else {
+#       if ( which.min(c(abs(bedFile_data[i-1, 3] - bedFile_data[i, 2]), abs(bedFile_data[i+1, 2] - bedFile_data[i, 3])) ) == 1){
+#         bedFile_data[i, 4] = bedFile_data[i-1, 4]
+#       } else {
+#           if ( bedFile_data[i+1, 4] != "0" ) { bedFile_data[i, 4] = bedFile_data[i+1, 4] }
+#           else { bedFile_data[i, 4] = bedFile_data[i-1, 4] }
+#       }
+#     }
+#   }
+# }
+
+
 # Create exon names. It changes the order in case there are overlapping genes.
 bedFile_data <- bedFile_data[order(bedFile_data$CHR, bedFile_data$GENE_NAME, bedFile_data$START),]
 j <- 1
@@ -79,6 +113,8 @@ for (i in 1:nrow(bedFile_data)){
 }
 
 bedFile_data <- bedFile_data[order(bedFile_data$CHR, bedFile_data$START),]
+
+
 
 
 # Create total_data. It contains the output of the programs
@@ -347,7 +383,7 @@ if(opt$samples!="all"){
 cat("#Analyzed samples: ", paste(mysamples, collapse = ", "), "\n", sep = "", file = paste(projectname, ".combined.txt", sep = ""))
 
 # Order the output
-if(nrow(data_out2>0)){
+if(nrow(data_out2)>0){
   data_out2 <- data_out2[order(data_out2$NUM_OF_PROGRAMS, decreasing = TRUE),]
   data_out2[data_out2 == ""] <- NA
 }

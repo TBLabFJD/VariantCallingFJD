@@ -407,7 +407,9 @@ if echo "$methods" | grep -q "MA"; then
 
 	# Removing temporal folder with passed files
 
-	rm -r $bamF_pass
+	if [ "$n" != "1" ] || [ "$status" != "PASSED" ]; then echo "Remove $CNV/passed_bams folder"; rm -r $bamF_pass ; fi
+
+	
 
 
 

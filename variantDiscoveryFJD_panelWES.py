@@ -231,7 +231,7 @@ def main():
 		bamF = args.output+"/bams"
 	
 	if not args.skipMapping and args.remove_bam:
-		if args.analysis != ["cnv","all"]:
+		if args.analysis not in ["cnv","all"]:
 			removebam="single"
 		else:
 			if not os.path.isdir(bamF) or not os.listdir(bamF):

@@ -23,7 +23,7 @@ input=$5
 output=$6
 fasta=$7  # ref Fasta
 ped=$8
-
+softwarePath=$9
 
 #####################
 ## MODULES AND DBs ##
