@@ -113,8 +113,6 @@ if [ "$ped" != "null" ]; then
 		-A PossibleDeNovo  \
 		-A StrandBiasBySample  \
 		-A AS_FisherStrand \
-		-A DepthPerAlleleBySample \
-		-A DepthPerSampleHC \
 		-ped $ped 
 	s3="$?"
 
