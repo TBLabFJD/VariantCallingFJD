@@ -1,0 +1,102 @@
+{
+  "title": "Performs BAM QC, and calls and filters SNVs",
+  "name": "bioinformatics/fjd/qc-bam-snv",
+  "version": "0.0.1",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "analysisType": {
+          "type": "string",
+          "enum": [
+            "mapping",
+            "snv",
+            "cnv",
+            "all"
+          ],
+          "required": true,
+          "description": "Type of analysis"
+        },
+        "refFolder": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Reference folder, containing FASTA and index files."
+        },
+        "bamFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM file"
+        },
+        "bamIndex": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM index file"
+        },
+        "minCoverage": {
+          "type": "integer",
+          "description": "Coverage threshold to check"
+        },
+        "gvcfCalling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Perform GATK GVCF calling."
+        },
+        "sample": {
+          "type": "string",
+          "required": true,
+          "description": "Sample name"
+        },
+        "panelInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "panelFile": {
+              "type": "string",
+              "required": true,
+              "format": "file",
+              "description": "Reference folder, containing FASTA and index files."
+            },
+            "intervalPadding": {
+              "type": "integer",
+              "default": 0,
+              "description": "Amount of padding (in bp) to add to each interval you are including."
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vcf": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Output VCF file"
+        }
+      }
+    }
+  },
+  "author": "BatchX",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Increased memory requirement",
+  "warningCodes": {
+    "2": "Low coverage found"
+  },
+  "pipeline": {
+    "steps": [
+      "iis-fjd@bioinformatics/fjd/mosdepth:0.0.3",
+      "iis-fjd@bioinformatics/fjd/snv-calling:0.0.1",
+      "iis-fjd@bioinformatics/fjd/snv-filtering:0.0.2"
+    ]
+  }
+}

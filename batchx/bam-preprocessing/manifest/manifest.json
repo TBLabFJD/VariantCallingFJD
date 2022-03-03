@@ -1,0 +1,90 @@
+{
+  "title": "Handles duplicates, sorts reads, calculates the NM, MD, and UQ tags and recalibrates",
+  "name": "bioinformatics/fjd/bam-preprocessing",
+  "version": "0.0.6",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "refFolder": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Reference folder, containing FASTA and index files"
+        },
+        "bamFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "SAM/BAM file"
+        },
+        "duplicates": {
+          "type": "string",
+          "enum": [
+            "ignore",
+            "remove",
+            "mark"
+          ],
+          "default": "mark",
+          "description": "How to handle duplicate reads"
+        },
+        "outputPrefix": {
+          "type": "string",
+          "required": true,
+          "description": "Prefix to use in the output files"
+        },
+        "knownSites": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "A list of validated VCFs with known sites of common variation. Used for filtering",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "featureFile": {
+                "type": "string",
+                "format": "file",
+                "description": "VCF file with known sites of common variation",
+                "required": true
+              },
+              "featureFileIndex": {
+                "type": "string",
+                "format": "file",
+                "description": "GATK index of the featureFile",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outputBam": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Folder containing output BAM files"
+        },
+        "metrics": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Metrics generated in intermediate steps"
+        }
+      }
+    }
+  },
+  "author": "BatchX",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Fix input"
+}

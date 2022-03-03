@@ -1,0 +1,49 @@
+{
+  "title": "Performs SNV filtering using GATK suite",
+  "name": "bioinformatics/fjd/snv-filtering",
+  "version": "0.0.2",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refFolder": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Reference folder, containing FASTA and index files"
+        },
+        "vcfFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM file"
+        },
+        "outputPrefix": {
+          "type": "string",
+          "required": true,
+          "description": "Prefix to use in the output files"
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filteredVcf": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Filtered VCF"
+        }
+      }
+    }
+  },
+  "author": "BatchX",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Removed CNN branch"
+}
