@@ -14,7 +14,7 @@ This pipeline has been developed by [**Translational Bioinformatics Lab**](https
  - Raquel Romero Fernández
  - Lorena de la Fuente Lorente
 
-### Collaborators
+### Developers
  - Ionut-Florin Iancu
  - Pablo Mínguez Paniagua
 
