@@ -297,7 +297,7 @@ def main():
 			
 			if args.plinkfile!=None:
 				if sample in chrDicc:
-					snp.loc[ index, loh_field]  = checkOverlapping(row['CHROM'], int(row['POS'],chrDicc[sample]))
+					snp.loc[ index, loh_field]  = checkOverlapping(row['CHROM'], int(row['POS']),chrDicc[sample])
 				else:
 					snp.loc[ index, loh_field]  = "False"
 

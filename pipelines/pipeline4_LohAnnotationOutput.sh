@@ -160,7 +160,7 @@ if [ "${mafincorporation}" != "False" ]; then
 
 	printf '\nMoving files to MAF folder...\n'
 
-	source ../pipeline.config
+	source ${softwarePath}/pipeline.config
 
 	maf_coverage_path=${db_coverage_path}
 	maf_vcf_path=${db_vcf_path}
