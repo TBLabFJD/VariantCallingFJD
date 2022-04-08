@@ -1,24 +1,13 @@
 {
-  "title": "Performs BAM QC, and calls and filters SNVs",
-  "name": "bioinformatics/fjd/qc-bam-snv",
-  "version": "0.0.1",
+  "title": "Performs BAM quality control, then calls and filters SNVs",
+  "name": "qc-bam-snv",
+  "version": "0.0.5",
   "schema": {
     "input": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "analysisType": {
-          "type": "string",
-          "enum": [
-            "mapping",
-            "snv",
-            "cnv",
-            "all"
-          ],
-          "required": true,
-          "description": "Type of analysis"
-        },
         "refFolder": {
           "type": "string",
           "required": true,
@@ -67,6 +56,60 @@
               "description": "Amount of padding (in bp) to add to each interval you are including."
             }
           }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mosdepth": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vcpus": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of VCPUs."
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "description": "RAM (MB)."
+                }
+              }
+            },
+            "snvFiltering": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vcpus": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of VCPUs."
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "description": "RAM (MB)."
+                }
+              }
+            },
+            "snvCalling": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vcpus": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of VCPUs."
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "description": "RAM (MB)."
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -84,19 +127,16 @@
       }
     }
   },
-  "author": "BatchX",
+  "author": "batchx@pminguez",
   "runtime": {
     "minMem": 4000
   },
-  "changeLog": "Increased memory requirement",
-  "warningCodes": {
-    "2": "Low coverage found"
-  },
+  "changeLog": "Initial version",
   "pipeline": {
     "steps": [
-      "iis-fjd@bioinformatics/fjd/mosdepth:0.0.3",
-      "iis-fjd@bioinformatics/fjd/snv-calling:0.0.1",
-      "iis-fjd@bioinformatics/fjd/snv-filtering:0.0.2"
+      "iis-fjd@mosdepth:0.0.1",
+      "iis-fjd@snv-calling:0.0.2",
+      "iis-fjd@snv-filtering:0.0.1"
     ]
   }
 }

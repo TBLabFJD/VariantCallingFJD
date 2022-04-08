@@ -1,7 +1,8 @@
 {
-  "title": "Calculates BAM coverage for QC (in SNP and CNV) and internal MAF database",
-  "name": "bioinformatics/fjd/mosdepth",
-  "version": "0.0.4",
+  "title": "Calculates BAM coverage quality check for SNV/INDEL and CNV calling.",
+  "name": "mosdepth",
+  "version": "0.0.1",
+  "scm":"https://github.com/TBLabFJD/VariantCallingFJD",
   "schema": {
     "input": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -74,7 +75,7 @@
       }
     }
   },
-  "author": "BatchX",
+  "author": "batchx@pminguez",
   "runtime": {
     "minMem": 4000
   },

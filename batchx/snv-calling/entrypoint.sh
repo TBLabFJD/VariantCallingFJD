@@ -6,7 +6,7 @@ inputFile=/batchx/input/input.json
 refFolder=$(cat $inputFile | jq -r .refFolder)
 bamFile=$(cat $inputFile | jq -r .bamFile)
 bamIndex=$(cat $inputFile | jq -r .bamIndex)
-outputPrefix=$(cat $inputFile | jq -r .outputPrefix)
+sample=$(cat $inputFile | jq -r .sample)
 panelFile=$(cat $inputFile | jq -r .panelInfo.panelFile)
 intervalPadding=$(cat $inputFile | jq -r .panelInfo.intervalPadding)
 gvcfCalling=$(cat $inputFile | jq -r .panelInfo.gvcfCalling)
@@ -25,11 +25,11 @@ ln -s $bamIndex /tmp/$(basename -- "$bamIndex")
 bamFile=/tmp/$(basename -- "$bamFile")
 
 printf "\n\n\n- HAPLOTYPECALLER (GATK)"
-printf '\nGATK HaplotypeCallerGVCF for '${outputPrefix}' STARTS'
-outputBam=/batchx/output/${outputPrefix}.bamout.bam
+printf '\nGATK HaplotypeCallerGVCF for '${sample}' STARTS'
+outputBam=/batchx/output/${sample}.bamout.bam
 if [ "$gvcfCalling" = "true" ]; then
   if [ "$panelFile" = "null" ]; then
-    outputVcf=/batchx/output/${outputPrefix}.g.vcf
+    outputVcf=/batchx/output/${sample}.g.vcf
     gatk HaplotypeCaller --tmp-dir /tmp/tmp \
       -R $refFile \
       -I $bamFile \
@@ -55,9 +55,9 @@ if [ "$gvcfCalling" = "true" ]; then
       --annotate-with-num-discovered-alleles true \
       -L $panelFile -ip $intervalPadding
   fi
-  printf '\nGATK HaplotypeCaller in GVCF mode for '${outputPrefix}' DONE\n'
+  printf '\nGATK HaplotypeCaller in GVCF mode for '${sample}' DONE\n'
 else
-  outputVcf=/batchx/output/${outputPrefix}.vcf
+  outputVcf=/batchx/output/${sample}.vcf
   if [ "$panelFile" = "null" ]; then
     gatk HaplotypeCaller --tmp-dir /tmp/tmp \
       -R $refFile \
@@ -74,6 +74,6 @@ else
       --annotate-with-num-discovered-alleles true \
       -L $panelFile -ip $intervalPadding
   fi
-  printf '\nGATK HaplotypeCaller in VCF mode for '${outputPrefix}' DONE\n'
+  printf '\nGATK HaplotypeCaller in VCF mode for '${sample}' DONE\n'
 fi
 echo "{\"outputVcf\":\"$outputVcf\",\"outputBam\":\"$outputBam\"}" >>/batchx/output/output.json

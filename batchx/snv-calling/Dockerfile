@@ -1,4 +1,4 @@
-FROM broadinstitute/gatk
+FROM broadinstitute/gatk:4.2.5.0
 RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 RUN apt-get update && apt-get install -y \
   jq \

@@ -20,9 +20,17 @@ if [ "$panelInfo" != "null" ]; then
   panelInfoField=",\"panelInfo\": $panelInfo"
 fi
 if [ "$minCoverage" != "null" ]; then
-  mosdepth_output=$(bx run -l -v=1 -m=4000 iis-fjd@bioinformatics/fjd/mosdepth:0.0.3 \
+  vcpus=$(cat $inputFile | jq -r .resources.mosdepth.vcpus)
+  if [ "$vcpus" == "null" ]; then
+    vcpus="1"
+  fi
+  memory=$(cat $inputFile | jq -r .resources.mosdepth.memory)
+  if [ "$memory" == "null" ]; then
+    memory="4000"
+  fi
+  mosdepth_output=$(bx run -l -v=$vcpus -m=$memory iis-fjd@mosdepth:0.0.1 \
   "{
-    \"analysisType\": \"$analysisType\",
+    \"analysisType\": \"snv\",
     \"bamFile\": \"$bamFile\",
     \"bamIndex\": \"$bamIndex\",
     \"sample\": \"$sample\",
@@ -37,12 +45,20 @@ printf ".........................\n"
 if [ "$gvcfCalling" != "null" ]; then
   gvcfCallingField=",\"gvcfCalling\": $gvcfCalling"
 fi
-snvcalling_output=$(bx run -l -v=1 -m=4000 iis-fjd@bioinformatics/fjd/snv-calling:0.0.1 \
+vcpus=$(cat $inputFile | jq -r .resources.snvCalling.vcpus)
+if [ "$vcpus" == "null" ]; then
+  vcpus="1"
+fi
+memory=$(cat $inputFile | jq -r .resources.snvCalling.memory)
+if [ "$memory" == "null" ]; then
+  memory="4000"
+fi
+snvcalling_output=$(bx run -l -v=$vcpus -m=$memory iis-fjd@snv-calling:0.0.2 \
 "{
   \"refFolder\": \"$refFolder\",
-  \"bamFile\": \"$outputBamFolder/$sample.bam\",
-  \"bamIndex\": \"$outputBamFolder/$sample.bai\",
-  \"outputPrefix\": \"$sample\"
+  \"bamFile\": \"$bamFile\",
+  \"bamIndex\": \"$bamIndexXX\",
+  \"sample\": \"$sample\"
   $gvcfCallingField
   $panelInfoField
 }")
@@ -51,13 +67,19 @@ vcf=$(echo $snvcalling_output | jq -r .outputVcf)
 printf "\n\n..........................\n"
 printf "  VARIANT FILTERING $sample \n"
 printf ".............................\n"
-
-snvfiltering_output=$(bx run -l -v=1 -m=4000 iis-fjd@bioinformatics/fjd/snv-filtering:0.0.2 \
+vcpus=$(cat $inputFile | jq -r .resources.snvFiltering.vcpus)
+if [ "$vcpus" == "null" ]; then
+  vcpus="1"
+fi
+memory=$(cat $inputFile | jq -r .resources.snvFiltering.memory)
+if [ "$memory" == "null" ]; then
+  memory="4000"
+fi
+snvfiltering_output=$(bx run -l -v=$vcpus -m=$memory iis-fjd@snv-filtering:0.0.1 \
 "{
-  \"outputPrefix\": \"$sample\",
-  \"refFolder\": \"$refFolder\",
+  \"sample\": \"$sample\",
+  \"refFolder\": \"$refFolderXX\",
   \"vcfFile\": \"$vcf\"
 }")
 filtered_vcf=$(echo $snvfiltering_output | jq -r .filteredVcf)
-
 echo "{\"vcf\":\"$filtered_vcf\"}" >>/batchx/output/output.json
