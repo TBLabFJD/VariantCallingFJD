@@ -8,6 +8,18 @@ This pipeline has been developed by [**Translational Bioinformatics Lab**](https
 [![Workflow](https://github.com/TBLabFJD/VariantCallingFJD/blob/master/Workflow.png)](https://github.com/TBLabFJD/VariantCallingFJD)
 
 
+## Developers
+### Main developers
+ - Gonzalo Núñez Moreno
+ - Raquel Romero Fernández
+ - Lorena de la Fuente Lorente
+
+### Developers
+ - Ionut-Florin Iancu
+ - Pablo Mínguez Paniagua
+
+### Contact
+ - Gonzalo Núñez Moreno (gonzalo.nunezm@quironsalud.es)
 
 ## License
 VariantCallingFJD source code is provided under the [**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**](https://creativecommons.org/licenses/by-nc-sa/4.0/). VariantCallingFJD includes several third party packages provided under other open source licenses, please check them for additional details.
