@@ -1,3 +1,5 @@
+[![Support this project by running your production jobs at BatchX](https://images.batchx.io/gh-badge-logo.svg)](https://platform.batchx.io/iis-fjd/profile "Support this project by running your production jobs at BatchX")
+
 # VariantCallingFJD
 
 

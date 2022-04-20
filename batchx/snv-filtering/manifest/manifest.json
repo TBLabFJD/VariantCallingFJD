@@ -1,0 +1,50 @@
+{
+  "title": "Performs SNV filtering using GATK suite",
+  "name": "snv-filtering",
+  "version": "0.0.1",
+  "scm":"https://github.com/TBLabFJD/VariantCallingFJD",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refFolder": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Reference folder, containing FASTA and index files"
+        },
+        "vcfFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM file"
+        },
+        "sample": {
+          "type": "string",
+          "required": true,
+          "description": "Sample name (used in the output file)"
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filteredVcf": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Filtered VCF"
+        }
+      }
+    }
+  },
+  "author": "batchx@pminguez",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Removed CNN branch"
+}

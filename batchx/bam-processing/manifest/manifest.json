@@ -1,0 +1,105 @@
+{
+  "title": "Preprocesses BAM, and calls and filters SNVs",
+  "name": "bioinformatics/fjd/bam-processing",
+  "version": "0.0.2",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refFolder": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Reference folder, containing FASTA and index files."
+        },
+        "bamFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM file"
+        },
+        "gvcfCalling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Perform GATK GVCF calling."
+        },
+        "sample": {
+          "type": "string",
+          "required": true,
+          "description": "Sample name"
+        },
+        "knownSites": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "A list of validated VCFs with known sites of common variation. Used for filtering",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "featureFile": {
+                "type": "string",
+                "format": "file",
+                "description": "VCF file with known sites of common variation",
+                "required": true
+              },
+              "featureFileIndex": {
+                "type": "string",
+                "format": "file",
+                "description": "GATK index of the featureFile",
+                "required": true
+              }
+            }
+          }
+        },
+        "panelInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "panelFile": {
+              "type": "string",
+              "required": true,
+              "format": "file",
+              "description": "Reference folder, containing FASTA and index files."
+            },
+            "intervalPadding": {
+              "type": "integer",
+              "default": 0,
+              "description": "Amount of padding (in bp) to add to each interval you are including."
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vcf": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Output VCF file"
+        }
+      }
+    }
+  },
+  "author": "BatchX",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Increased memory requirement",
+  "warningCodes": {
+    "2": "Low coverage found"
+  },
+  "pipeline": {
+    "steps": [
+      "iis-fjd@bioinformatics/fjd/bam-preprocessing:0.0.6",
+      "iis-fjd@bioinformatics/fjd/snv-calling:0.0.1",
+      "iis-fjd@bioinformatics/fjd/snv-filtering:0.0.2"
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "title": "Calculates BAM coverage quality check for SNV/INDEL and CNV calling.",
+  "name": "mosdepth",
+  "version": "0.0.1",
+  "scm":"https://github.com/TBLabFJD/VariantCallingFJD",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "analysisType": {
+          "type": "string",
+          "enum": [
+            "mapping",
+            "snv",
+            "cnv",
+            "all"
+          ],
+          "required": true,
+          "description": "Type of analysis"
+        },
+        "bamFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM file"
+        },
+        "bamIndex": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM index file"
+        },
+        "sample": {
+          "type": "string",
+          "required": true,
+          "description": "Sample name"
+        },
+        "panelInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "panelFile": {
+              "type": "string",
+              "required": true,
+              "format": "file",
+              "description": "BED file containing the regions of interest."
+            },
+            "intervalPadding": {
+              "type": "integer",
+              "default": 0,
+              "description": "Amount of padding (in bp) to add to each interval you are including."
+            }
+          }
+        },
+        "minCoverage": {
+          "type": "integer",
+          "default": 10,
+          "description": "Coverage threshold to check"
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "report": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Report folder"
+        }
+      }
+    }
+  },
+  "author": "batchx@pminguez",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Renamed readThreshold to minCoverage",
+  "warningCodes": {
+    "2": "Low coverage found"
+  }
+}

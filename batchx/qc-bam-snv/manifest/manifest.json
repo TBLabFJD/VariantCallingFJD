@@ -1,0 +1,142 @@
+{
+  "title": "Performs BAM quality control, then calls and filters SNVs",
+  "name": "qc-bam-snv",
+  "version": "0.0.5",
+  "schema": {
+    "input": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refFolder": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Reference folder, containing FASTA and index files."
+        },
+        "bamFile": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM file"
+        },
+        "bamIndex": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "BAM index file"
+        },
+        "minCoverage": {
+          "type": "integer",
+          "description": "Coverage threshold to check"
+        },
+        "gvcfCalling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Perform GATK GVCF calling."
+        },
+        "sample": {
+          "type": "string",
+          "required": true,
+          "description": "Sample name"
+        },
+        "panelInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "panelFile": {
+              "type": "string",
+              "required": true,
+              "format": "file",
+              "description": "Reference folder, containing FASTA and index files."
+            },
+            "intervalPadding": {
+              "type": "integer",
+              "default": 0,
+              "description": "Amount of padding (in bp) to add to each interval you are including."
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mosdepth": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vcpus": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of VCPUs."
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "description": "RAM (MB)."
+                }
+              }
+            },
+            "snvFiltering": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vcpus": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of VCPUs."
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "description": "RAM (MB)."
+                }
+              }
+            },
+            "snvCalling": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vcpus": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of VCPUs."
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "description": "RAM (MB)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vcf": {
+          "type": "string",
+          "required": true,
+          "format": "file",
+          "description": "Output VCF file"
+        }
+      }
+    }
+  },
+  "author": "batchx@pminguez",
+  "runtime": {
+    "minMem": 4000
+  },
+  "changeLog": "Initial version",
+  "pipeline": {
+    "steps": [
+      "iis-fjd@mosdepth:0.0.1",
+      "iis-fjd@snv-calling:0.0.2",
+      "iis-fjd@snv-filtering:0.0.1"
+    ]
+  }
+}
